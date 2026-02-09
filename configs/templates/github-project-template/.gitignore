@@ -1,0 +1,6 @@
+docs/daily-reports/
+docs/weekly-reports/
+docs/daily-reports/*
+docs/weekly-reports/*
+!docs/daily-reports/$(date +%F).md
+!docs/weekly-reports/$(date +%F).md

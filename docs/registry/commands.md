@@ -10,3 +10,4 @@
 | run health check | Run system health check skill | commands/health.md |
 | run registry validation | Validate all registry files | commands/validate.md |
 
+| git-sync | scripts/utilities/git-sync.sh | Commit and push all changes to GitHub | ✅ |
