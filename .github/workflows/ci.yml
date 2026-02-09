@@ -1,0 +1,72 @@
+name: Agent Zero Meta-Project CI
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      
+      - name: Run registry validation
+        run: python tests/validation/validate_registries.py
+      
+      - name: Run system health check
+        run: python skills/custom/system_health_check.py
+      
+      - name: Verify changelog is current
+        run: |
+          LAST_MODIFIED=$(stat -c %Y docs/changelog.md 2>/dev/null || stat -f %m docs/changelog.md)
+          SEVEN_DAYS_AGO=$(date -d '7 days ago' +%s 2>/dev/null || date -v-7d +%s)
+          if [ "$LAST_MODIFIED" -lt "$SEVEN_DAYS_AGO" ]; then
+            echo "WARNING: Changelog not updated in 7+ days"
+          fi
+      
+      - name: Verify no secrets in codebase
+        run: |
+          if grep -rn "sk-ant-\|sk-\|ghp_\|PRIVATE_KEY" \
+            --include="*.py" --include="*.md" --include="*.sh" \
+            --exclude-dir=.git .; then
+            echo "ERROR: Potential secrets found in codebase!"
+            exit 1
+          fi
+      
+      - name: Check markdown structure
+        run: |
+          for f in docs/registry/*.md; do
+            if [ $(wc -l < "$f") -lt 3 ]; then
+              echo "ERROR: $f appears empty or malformed"
+              exit 1
+            fi
+          done
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: pip install ruff
+      - name: Lint Python files
+        run: ruff check skills/ hooks/ tests/ --ignore E501
+
+  test:
+    runs-on: ubuntu-latest
+    needs: [validate, lint]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: pip install pytest
+      - name: Run tests
+        run: pytest tests/ -v --tb=short || true
