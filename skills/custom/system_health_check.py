@@ -13,9 +13,10 @@ Example usage:
     print(report)
 """
 import os
-from datetime import datetime, timedelta
+from datetime import datetime
 
-PROJECT_ROOT = '/a0/usr/projects/agent_zero'
+import os
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 EXPECTED_DIRS = [
     'knowledge',
     'tests/validation',

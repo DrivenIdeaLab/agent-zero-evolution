@@ -1,0 +1,16 @@
+﻿2026-02-09T04:37:28.9264557Z ##[group]Run for f in docs/registry/*.md; do
+2026-02-09T04:37:28.9265286Z [36;1mfor f in docs/registry/*.md; do[0m
+2026-02-09T04:37:28.9265932Z [36;1m  if [ $(wc -l < "$f") -lt 3 ]; then[0m
+2026-02-09T04:37:28.9266880Z [36;1m    echo "ERROR: $f appears empty or malformed"[0m
+2026-02-09T04:37:28.9267558Z [36;1m    exit 1[0m
+2026-02-09T04:37:28.9267984Z [36;1m  fi[0m
+2026-02-09T04:37:28.9268368Z [36;1mdone[0m
+2026-02-09T04:37:28.9297620Z shell: /usr/bin/bash -e {0}
+2026-02-09T04:37:28.9298128Z env:
+2026-02-09T04:37:28.9298671Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:37:28.9299648Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.11/x64/lib/pkgconfig
+2026-02-09T04:37:28.9300593Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:37:28.9301435Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:37:28.9302285Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:37:28.9303156Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.11/x64/lib
+2026-02-09T04:37:28.9303896Z ##[endgroup]

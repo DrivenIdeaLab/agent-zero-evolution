@@ -1,0 +1,15 @@
+﻿2026-02-09T04:37:28.8911026Z ##[group]Run LAST_MODIFIED=$(stat -c %Y docs/changelog.md 2>/dev/null || stat -f %m docs/changelog.md)
+2026-02-09T04:37:28.8912669Z [36;1mLAST_MODIFIED=$(stat -c %Y docs/changelog.md 2>/dev/null || stat -f %m docs/changelog.md)[0m
+2026-02-09T04:37:28.8914011Z [36;1mSEVEN_DAYS_AGO=$(date -d '7 days ago' +%s 2>/dev/null || date -v-7d +%s)[0m
+2026-02-09T04:37:28.8915066Z [36;1mif [ "$LAST_MODIFIED" -lt "$SEVEN_DAYS_AGO" ]; then[0m
+2026-02-09T04:37:28.8915927Z [36;1m  echo "WARNING: Changelog not updated in 7+ days"[0m
+2026-02-09T04:37:28.8916913Z [36;1mfi[0m
+2026-02-09T04:37:28.8947241Z shell: /usr/bin/bash -e {0}
+2026-02-09T04:37:28.8947761Z env:
+2026-02-09T04:37:28.8948307Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:37:28.8949329Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.11/x64/lib/pkgconfig
+2026-02-09T04:37:28.8950337Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:37:28.8951228Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:37:28.8952149Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:37:28.8953040Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.11/x64/lib
+2026-02-09T04:37:28.8953785Z ##[endgroup]

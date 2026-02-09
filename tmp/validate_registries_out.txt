@@ -1,0 +1,5 @@
+docs/registry/skills.md: PASS - OK
+docs/registry/hooks.md: PASS - OK
+docs/registry/permissions.md: PASS - OK
+docs/registry/agents.md: PASS - OK
+docs/registry/commands.md: PASS - OK

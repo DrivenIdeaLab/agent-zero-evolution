@@ -1,0 +1,55 @@
+F811 [*] Redefinition of unused `os` from line 15
+  --> skills/custom/system_health_check.py:15:8
+   |
+13 |     print(report)
+14 | """
+15 | import os
+   |        -- previous definition of `os` here
+16 | from datetime import datetime
+17 |
+18 | import os
+   |        ^^ `os` redefined here
+19 | PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+20 | EXPECTED_DIRS = [
+   |
+help: Remove definition: `os`
+
+F811 [*] Redefinition of unused `os` from line 11
+  --> tests/validation/validate_registries.py:11:8
+   |
+ 9 | Run: python tests/validation/validate_registries.py
+10 | """
+11 | import os
+   |        -- previous definition of `os` here
+12 |
+13 | import os
+   |        ^^ `os` redefined here
+14 | PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+15 | REGISTRIES = [
+   |
+help: Remove definition: `os`
+
+E741 Ambiguous variable name: `l`
+  --> tests/validation/validate_registries.py:26:33
+   |
+24 |         lines = [line.strip() for line in f if line.strip()]
+25 |     # Find table header and separator
+26 |     header_idx = next((i for i, l in enumerate(lines) if l.startswith('|')), None)
+   |                                 ^
+27 |     sep_idx = header_idx + 1 if header_idx is not None and len(lines) > header_idx+1 and set(lines[header_idx+1].replace('|','').strip…
+28 |     if header_idx is None or sep_idx is None:
+   |
+
+E741 Ambiguous variable name: `l`
+  --> tests/validation/validate_registries.py:31:9
+   |
+29 |         return False, 'Missing or malformed table header/separator'
+30 |     # Check for empty/placeholder rows
+31 |     for l in lines[sep_idx+1:]:
+   |         ^
+32 |         if l.count('|') < 2:
+33 |             continue
+   |
+
+Found 4 errors.
+[*] 2 fixable with the `--fix` option.

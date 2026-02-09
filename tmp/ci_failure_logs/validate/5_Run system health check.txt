@@ -1,0 +1,11 @@
+﻿2026-02-09T04:37:28.8419334Z ##[group]Run python skills/custom/system_health_check.py
+2026-02-09T04:37:28.8420236Z [36;1mpython skills/custom/system_health_check.py[0m
+2026-02-09T04:37:28.8452639Z shell: /usr/bin/bash -e {0}
+2026-02-09T04:37:28.8453153Z env:
+2026-02-09T04:37:28.8453674Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:37:28.8454646Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.11/x64/lib/pkgconfig
+2026-02-09T04:37:28.8455612Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:37:28.8456697Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:37:28.8457610Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:37:28.8458496Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.11/x64/lib
+2026-02-09T04:37:28.8459217Z ##[endgroup]

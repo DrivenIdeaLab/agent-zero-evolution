@@ -1,5 +1,5 @@
 import re
-from typing import List, Dict, Any
+from typing import List, Dict
 
 def detect_incomplete(response: str) -> bool:
     incomplete_patterns = [

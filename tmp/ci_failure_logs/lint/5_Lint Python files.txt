@@ -1,0 +1,70 @@
+﻿2026-02-09T04:37:41.1226515Z ##[group]Run ruff check skills/ hooks/ tests/ --ignore E501
+2026-02-09T04:37:41.1227020Z [36;1mruff check skills/ hooks/ tests/ --ignore E501[0m
+2026-02-09T04:37:41.1260586Z shell: /usr/bin/bash -e {0}
+2026-02-09T04:37:41.1260824Z env:
+2026-02-09T04:37:41.1261077Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:37:41.1261504Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.11/x64/lib/pkgconfig
+2026-02-09T04:37:41.1261947Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:37:41.1262322Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:37:41.1262677Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:37:41.1263054Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.11/x64/lib
+2026-02-09T04:37:41.1263361Z ##[endgroup]
+2026-02-09T04:37:41.1403295Z F401 [*] `datetime.timedelta` imported but unused
+2026-02-09T04:37:41.1404040Z   --> skills/custom/system_health_check.py:16:32
+2026-02-09T04:37:41.1404534Z    |
+2026-02-09T04:37:41.1404897Z 14 | """
+2026-02-09T04:37:41.1405180Z 15 | import os
+2026-02-09T04:37:41.1405552Z 16 | from datetime import datetime, timedelta
+2026-02-09T04:37:41.1406038Z    |                                ^^^^^^^^^
+2026-02-09T04:37:41.1406455Z 17 |
+2026-02-09T04:37:41.1406797Z 18 | PROJECT_ROOT = '/a0/usr/projects/agent_zero'
+2026-02-09T04:37:41.1407273Z    |
+2026-02-09T04:37:41.1407622Z help: Remove unused import: `datetime.timedelta`
+2026-02-09T04:37:41.1408237Z 
+2026-02-09T04:37:41.1408415Z F401 [*] `typing.Any` imported but unused
+2026-02-09T04:37:41.1408890Z  --> skills/custom/task_continuation.py:2:32
+2026-02-09T04:37:41.1409327Z   |
+2026-02-09T04:37:41.1409581Z 1 | import re
+2026-02-09T04:37:41.1409906Z 2 | from typing import List, Dict, Any
+2026-02-09T04:37:41.1410317Z   |                                ^^^
+2026-02-09T04:37:41.1410677Z 3 |
+2026-02-09T04:37:41.1411056Z 4 | def detect_incomplete(response: str) -> bool:
+2026-02-09T04:37:41.1411548Z   |
+2026-02-09T04:37:41.1411854Z help: Remove unused import: `typing.Any`
+2026-02-09T04:37:41.1412174Z 
+2026-02-09T04:37:41.1412324Z E741 Ambiguous variable name: `l`
+2026-02-09T04:37:41.1412791Z   --> tests/validation/validate_registries.py:23:32
+2026-02-09T04:37:41.1413226Z    |
+2026-02-09T04:37:41.1413866Z 21 | def validate_table(path):
+2026-02-09T04:37:41.1414244Z 22 |     with open(path) as f:
+2026-02-09T04:37:41.1414643Z 23 |         lines = [l.strip() for l in f if l.strip()]
+2026-02-09T04:37:41.1414937Z    |                                ^
+2026-02-09T04:37:41.1415187Z 24 |     # Find table header and separator
+2026-02-09T04:37:41.1415576Z 25 |     header_idx = next((i for i, l in enumerate(lines) if l.startswith('|')), None)
+2026-02-09T04:37:41.1415933Z    |
+2026-02-09T04:37:41.1416031Z 
+2026-02-09T04:37:41.1416121Z E741 Ambiguous variable name: `l`
+2026-02-09T04:37:41.1416402Z   --> tests/validation/validate_registries.py:25:33
+2026-02-09T04:37:41.1416675Z    |
+2026-02-09T04:37:41.1416941Z 23 |         lines = [l.strip() for l in f if l.strip()]
+2026-02-09T04:37:41.1417905Z 24 |     # Find table header and separator
+2026-02-09T04:37:41.1418579Z 25 |     header_idx = next((i for i, l in enumerate(lines) if l.startswith('|')), None)
+2026-02-09T04:37:41.1419216Z    |                                 ^
+2026-02-09T04:37:41.1420195Z 26 |     sep_idx = header_idx + 1 if header_idx is not None and len(lines) > header_idx+1 and set(lines[header_idx+1].replace('|','').strip…
+2026-02-09T04:37:41.1420768Z 27 |     if header_idx is None or sep_idx is None:
+2026-02-09T04:37:41.1421039Z    |
+2026-02-09T04:37:41.1421135Z 
+2026-02-09T04:37:41.1421235Z E741 Ambiguous variable name: `l`
+2026-02-09T04:37:41.1421514Z   --> tests/validation/validate_registries.py:30:9
+2026-02-09T04:37:41.1421785Z    |
+2026-02-09T04:37:41.1422032Z 28 |         return False, 'Missing or malformed table header/separator'
+2026-02-09T04:37:41.1422399Z 29 |     # Check for empty/placeholder rows
+2026-02-09T04:37:41.1422672Z 30 |     for l in lines[sep_idx+1:]:
+2026-02-09T04:37:41.1422913Z    |         ^
+2026-02-09T04:37:41.1423330Z 31 |         if l.count('|') < 2:
+2026-02-09T04:37:41.1423573Z 32 |             continue
+2026-02-09T04:37:41.1423780Z    |
+2026-02-09T04:37:41.1423876Z 
+2026-02-09T04:37:41.1423951Z Found 5 errors.
+2026-02-09T04:37:41.1424167Z [*] 2 fixable with the `--fix` option.
+2026-02-09T04:37:41.1434728Z ##[error]Process completed with exit code 1.

@@ -1,0 +1,16 @@
+﻿2026-02-09T04:37:28.5945002Z ##[group]Run python tests/validation/validate_registries.py
+2026-02-09T04:37:28.5946036Z [36;1mpython tests/validation/validate_registries.py[0m
+2026-02-09T04:37:28.6114195Z shell: /usr/bin/bash -e {0}
+2026-02-09T04:37:28.6114771Z env:
+2026-02-09T04:37:28.6115353Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:37:28.6116374Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.11/x64/lib/pkgconfig
+2026-02-09T04:37:28.6117568Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:37:28.6118464Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:37:28.6119354Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:37:28.6120685Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.11/x64/lib
+2026-02-09T04:37:28.6121594Z ##[endgroup]
+2026-02-09T04:37:28.8350106Z docs/registry/skills.md: MISSING
+2026-02-09T04:37:28.8351157Z docs/registry/hooks.md: MISSING
+2026-02-09T04:37:28.8352095Z docs/registry/permissions.md: MISSING
+2026-02-09T04:37:28.8353148Z docs/registry/agents.md: MISSING
+2026-02-09T04:37:28.8354013Z docs/registry/commands.md: MISSING

@@ -1,3 +1,4 @@
+[2026-02-09] [FIX] CI failures: unused imports, ambiguous variables, hardcoded paths
 [2026-02-09] [ENHANCEMENT] Phase 2: Added .github/workflows/ci.yml for GitHub Actions CI pipeline (validate, lint, test jobs). Phase 3: Added scripts/utilities/git-sync.sh for auto-commit/push (executable, not in cron). Both committed and pushed; CI workflow triggered (commit 8890bb6, run #1). Awaiting user review before automation.
 
 # Changelog
