@@ -1,0 +1,463 @@
+# /a0/python/tools/a2a_chat.py
+from python.helpers.tool import Tool, Response
+from python.helpers.fasta2a_client import connect_to_agent, is_client_available
+    """Communicate with another FastA2A-compatible agent."""
+            return Response(message="FastA2A client not available on this instance.", break_loop=False)
+        agent_url: str | None = kwargs.get("agent_url")  # required
+        if not agent_url or not isinstance(agent_url, str):
+            return Response(message="agent_url argument missing", break_loop=False)
+            return Response(message="message argument missing", break_loop=False)
+        # Retrieve or create session cache on the Agent instance
+        sessions: dict[str, str] = self.agent.get_data("_a2a_sessions") or {}
+        if reset and agent_url in sessions:
+            sessions.pop(agent_url, None)
+        context_id = None if reset else sessions.get(agent_url)
+            async with await connect_to_agent(agent_url) as conn:
+                task_resp = await conn.send_message(user_message, attachments=attachments, context_id=context_id)
+                    return Response(message="Remote agent failed to create task.", break_loop=False)
+                final = await conn.wait_for_completion(task_id)
+                    sessions[agent_url] = new_context_id
+                    # persist back to agent data
+                    self.agent.set_data("_a2a_sessions", sessions)
+                return Response(message=assistant_text or "(no response)", break_loop=False)
+            return Response(message=f"A2A chat error: {e}", break_loop=False)
+# /a0/python/tools/behaviour_adjustment.py
+from python.helpers.tool import Tool, Response
+from agent import Agent
+        await update_behaviour(self.agent, self.log, adjustments)
+        return Response(
+            message=self.agent.read_prompt("behaviour.updated.md"), break_loop=False
+    # async def after_execution(self, response, **kwargs):
+async def update_behaviour(agent: Agent, log_item: LogItem, adjustments: str):
+    system = agent.read_prompt("behaviour.merge.sys.md")
+    current_rules = read_rules(agent)
+    msg = agent.read_prompt(
+    adjustments_merge = await agent.call_utility_model(
+    rules_file = get_custom_rules_file(agent)
+def get_custom_rules_file(agent: Agent):
+    return files.get_abs_path(memory.get_memory_subdir_abs(agent), "behaviour.md")
+def read_rules(agent: Agent):
+    rules_file = get_custom_rules_file(agent)
+        rules = files.read_prompt_file(rules_file)
+        return agent.read_prompt("agent.system.behaviour.md", rules=rules)
+        rules = agent.read_prompt("agent.system.behaviour_default.md")
+        return agent.read_prompt("agent.system.behaviour.md", rules=rules)
+# /a0/python/tools/browser_agent.py
+from agent import Agent, InterventionException
+from python.helpers.tool import Tool, Response
+    async def create(agent: Agent):
+        state = State(agent)
+    def __init__(self, agent: Agent):
+        self.agent = agent
+        self.use_agent: Optional[browser_use.Agent] = None
+            / f"agent_{self.agent.context.id}"
+                minimum_wait_page_load_time=1.0,
+                wait_for_network_idle_page_load_time=2.0,
+                maximum_wait_page_load_time=10.0,
+                extra_http_headers=self.agent.config.browser_http_headers or {},
+        await self.browser_session.start() if self.browser_session else None
+                page = await self.browser_session.get_current_page()
+                    await page.set_viewport_size({"width": 1024, "height": 2048})
+            await self.browser_session.browser_context.add_init_script(path=js_override) if self.browser_session else None
+            thread_name="BrowserAgent" + self.agent.context.id
+        if self.agent.context.task:
+            self.agent.context.task.add_child_task(self.task, terminate_thread=True)
+        self.use_agent = None
+        await self._initialize()
+            response: str
+        model = self.agent.get_browser_model()
+            secrets_manager = get_secrets_manager(self.agent.context)
+            self.use_agent = browser_use.Agent(
+                use_vision=self.agent.config.browser_model.vision,
+                extend_system_message=self.agent.read_prompt(
+                    "prompts/browser_agent.system.md"
+                f"Browser agent initialization failed. This might be due to model compatibility issues. Error: {e}"
+        self.iter_no = get_iter_no(self.agent)
+        async def hook(agent: browser_use.Agent):
+            await self.agent.wait_if_paused()
+            if self.iter_no != get_iter_no(self.agent):
+        if self.use_agent:
+            result = await self.use_agent.run(
+        if self.use_agent and self.browser_session:
+                return await self.use_agent.browser_session.get_current_page() if self.use_agent.browser_session else None
+        if self.use_agent:
+            await self.use_agent.browser_session.get_state_summary(cache_clickable_elements_hashes=True) if self.use_agent.browser_session else None
+            return await self.use_agent.browser_session.get_selector_map() if self.use_agent.browser_session else None
+            await self.use_agent.browser_session.get_state_summary(
+            return await self.use_agent.browser_session.get_selector_map()
+class BrowserAgent(Tool):
+        self.guid = self.agent.context.generate_id() # short random id
+        await self.prepare_state(reset=reset)
+        message = get_secrets_manager(self.agent.context).mask_values(message, placeholder="<secret>{key}</secret>") # mask any potential passwords passed from A0 to browser-use to browser-use format
+        # wait for browser agent to finish and update progress with timeout
+            # Check for timeout to prevent infinite waiting
+                    self._mask(f"Browser agent task timeout after {timeout_seconds} seconds, forcing completion")
+            await self.agent.handle_intervention()
+            await asyncio.sleep(1)
+                    update = await asyncio.wait_for(self.get_update(), timeout=10)
+                        self._mask(f"browser_agent.get_update timed out ({fail_counter}/3)")
+                            self._mask("3 consecutive browser_agent.get_update timeouts, breaking loop")
+                update_log = update.get("log", get_use_agent_log(None))
+            PrintStyle().warning(self._mask("browser_agent.get_update timed out, killing the task"))
+            return Response(
+                message=self._mask("Browser agent task timed out, not output provided."),
+        if self.state and self.state.use_agent:
+            log_final = get_use_agent_log(self.state.use_agent)
+            result = await task.result() if task else None
+            PrintStyle().error(self._mask(f"Error getting browser agent task result: {str(e)}"))
+            # Return a timeout response if task.result() fails
+            answer_text = self._mask(f"Browser agent task failed to return result: {str(e)}")
+            return Response(message=answer_text, break_loop=False)
+                f"The browser agent may need clearer instructions on when to finish."
+        # Mask answer for logs and response
+        return Response(message=answer_text, break_loop=False)
+        return self.agent.context.log.log(
+            heading=f"icon://captive_portal {self.agent.agent_name}: Calling Browser Agent",
+        await self.prepare_state()
+        agent = self.agent
+        ua = self.state.use_agent if self.state else None
+        page = await self.state.get_page() if self.state else None
+                    # await agent.wait_if_paused() # no need here
+                    result["log"] = get_use_agent_log(ua)
+                        persist_chat.get_chat_folder_path(agent.context.id),
+                    await page.screenshot(path=path, full_page=False, timeout=3000)
+                    await self.state.task.execute_inside(_get_update)
+        self.state = self.agent.get_data("_browser_agent_state")
+            self.state = await State.create(self.agent)
+        self.agent.set_data("_browser_agent_state", self.state)
+        self.agent.context.log.set_progress(progress)
+            return get_secrets_manager(self.agent.context).mask_values(text or "")
+def get_use_agent_log(use_agent: browser_use.Agent | None):
+    if use_agent:
+        action_results = use_agent.history.action_results() or []
+# /a0/python/tools/call_subordinate.py
+from agent import Agent, UserMessage
+from python.helpers.tool import Tool, Response
+from initialize import initialize_agent
+        # create subordinate agent using the data object on this agent and set superior agent to his data object
+            self.agent.get_data(Agent.DATA_NAME_SUBORDINATE) is None
+            config = initialize_agent()
+            # set subordinate prompt profile if provided, if not, keep original
+            agent_profile = kwargs.get("profile")
+            if agent_profile:
+                config.profile = agent_profile
+            # crate agent
+            sub = Agent(self.agent.number + 1, config, self.agent.context)
+            sub.set_data(Agent.DATA_NAME_SUPERIOR, self.agent)
+            self.agent.set_data(Agent.DATA_NAME_SUBORDINATE, sub)
+        # add user message to subordinate agent
+        subordinate: Agent = self.agent.get_data(Agent.DATA_NAME_SUBORDINATE)  # type: ignore
+        result = await subordinate.monologue()
+        # hint to use includes for long responses
+            hint = self.agent.read_prompt("fw.hint.call_sub.md")
+        return Response(message=result, break_loop=False, additional=additional)
+        return self.agent.context.log.log(
+            heading=f"icon://communication {self.agent.agent_name}: Calling Subordinate Agent",
+# /a0/python/tools/code_execution_tool.py
+from python.helpers.tool import Tool, Response
+from python.helpers.messages import truncate_text as truncate_text_agent
+    # Common shell prompt regex patterns (add more as needed)
+    prompt_patterns = [
+        re.compile(r"\(?.*\)?\s*PS\s+[^>]+> ?$"),  # PowerShell prompt like (base) PS C:\...>
+    async def execute(self, **kwargs) -> Response:
+        await self.agent.handle_intervention()  # wait for intervention and handle it, if paused
+            response = await self.execute_python_code(
+            response = await self.execute_nodejs_code(
+            response = await self.execute_terminal_command(
+            response = await self.get_terminal_output(
+            response = await self.reset_terminal(session=session)
+            response = self.agent.read_prompt(
+        if not response:
+            response = self.agent.read_prompt(
+                "fw.code.info.md", info=self.agent.read_prompt("fw.code.no_output.md")
+        return Response(message=response, break_loop=False)
+        return self.agent.context.log.log(
+    async def after_execution(self, response, **kwargs):
+        self.agent.hist_add_tool_result(self.name, response.message, **(response.additional or {}))
+        self.state: State | None = self.agent.get_data("_cet_state")
+        if not self.state or self.state.ssh_enabled != self.agent.config.code_exec_ssh_enabled:
+            await shells[session].session.close()
+                await shells[s].session.close()
+            if self.agent.config.code_exec_ssh_enabled:
+                    self.agent.config.code_exec_ssh_pass
+                    if self.agent.config.code_exec_ssh_pass
+                    else await rfc_exchange.get_root_password()
+                    self.agent.context.log,
+                    self.agent.config.code_exec_ssh_addr,
+                    self.agent.config.code_exec_ssh_port,
+                    self.agent.config.code_exec_ssh_user,
+            await shell.connect()
+        self.state = State(shells=shells, ssh_enabled=self.agent.config.code_exec_ssh_enabled)
+        self.agent.set_data("_cet_state", self.state)
+        return await self.terminal_session(session, command, reset, prefix)
+        return await self.terminal_session(session, command, reset, prefix)
+        prefix = ("bash>" if not runtime.is_windows() or self.agent.config.code_exec_ssh_enabled else "PS>") + self.format_command_for_output(command) + "\n\n"
+        return await self.terminal_session(session, command, reset, prefix)
+        self.state = await self.prepare_state(reset=reset, session=session)
+        await self.agent.handle_intervention()  # wait for intervention and handle it, if paused
+            if response := await self.handle_running_session(session):
+                return response
+                await self.state.shells[session].session.send_command(command)
+                ).print(f"{self.agent.agent_name} code execution output{locl}")
+                return await self.get_terminal_output(session=session, prefix=prefix, timeouts=(timeouts or CODE_EXEC_TIMEOUTS))
+                    await self.prepare_state(reset=True, session=session)
+        first_output_timeout=30,  # Wait up to x seconds for first output
+        between_output_timeout=15,  # Wait up to x seconds between outputs
+        self.state = await self.prepare_state(session=session)
+            await asyncio.sleep(sleep_time)
+            full_output, partial_output = await self.state.shells[session].session.read_output(
+            await self.agent.handle_intervention()
+                # Check for shell prompt at the end of output
+                    for pat in self.prompt_patterns:
+                                "Detected shell prompt, returning output early."
+                sysinfo = self.agent.read_prompt(
+                response = self.agent.read_prompt("fw.code.info.md", info=sysinfo)
+                    response = truncated_output + "\n\n" + response
+                self.log.update(content=prefix + response, heading=heading)
+                return response
+            # Waiting for first output
+                    sysinfo = self.agent.read_prompt(
+                    response = self.agent.read_prompt("fw.code.info.md", info=sysinfo)
+                    self.log.update(content=prefix + response)
+                    return response
+                # Waiting for more output after first output
+                    sysinfo = self.agent.read_prompt(
+                    response = self.agent.read_prompt("fw.code.info.md", info=sysinfo)
+                        response = truncated_output + "\n\n" + response
+                    self.log.update(content=prefix + response, heading=heading)
+                    return response
+                    # Check for dialog prompt at the end of output
+                                    "Detected dialog prompt, returning output early."
+                                sysinfo = self.agent.read_prompt(
+                                response = self.agent.read_prompt(
+                                    response = truncated_output + "\n\n" + response
+                                    content=prefix + response, heading=heading
+                                return response
+        full_output, _ = await self.state.shells[session].session.read_output(
+            for pat in self.prompt_patterns:
+                        "Detected shell prompt, returning output early."
+            sys_info = self.agent.read_prompt("fw.code.pause_dialog.md", timeout=1)       
+            sys_info = self.agent.read_prompt("fw.code.running.md", session=session)
+        response = self.agent.read_prompt("fw.code.info.md", info=sys_info)
+            response = truncated_output + "\n\n" + response
+        PrintStyle(font_color="#FFA500", bold=True).print(response)
+        self.log.update(content=prefix + response, heading=heading)
+        return response
+        await self.prepare_state(reset=True, session=session)
+        response = self.agent.read_prompt(
+            "fw.code.info.md", info=self.agent.read_prompt("fw.code.reset.md")
+        self.log.update(content=response)
+        return response
+        output = truncate_text_agent(agent=self.agent, output=output, threshold=1000000) # ~1MB, larger outputs should be dumped to file, not read from terminal
+        project_name = projects.get_context_project_name(self.agent.context)
+# /a0/python/tools/document_query.py
+from python.helpers.tool import Tool, Response
+from python.helpers.document_query import DocumentQueryHelper
+            return Response(message="Error: no document provided", break_loop=False)
+            helper = DocumentQueryHelper(self.agent, progress_callback)
+                contents = await asyncio.gather(
+                _, content = await helper.document_qa(document_uris, queries)
+            return Response(message=content, break_loop=False)
+            return Response(message=f"Error processing document: {e}", break_loop=False)
+# /a0/python/tools/input.py
+from agent import Agent, UserMessage
+from python.helpers.tool import Tool, Response
+from python.tools.code_execution_tool import CodeExecution
+class Input(Tool):
+        # normalize keyboard input
+        # forward keyboard input to code execution tool
+        cet = CodeExecution(self.agent, "code_execution_tool", "", args, self.message, self.loop_data)
+        return await cet.execute(**args)
+        return self.agent.context.log.log(type="code_exe", heading=f"icon://keyboard {self.agent.agent_name}: Using tool '{self.name}'", content="", kvps=self.args)
+    async def after_execution(self, response, **kwargs):
+        self.agent.hist_add_tool_result(self.name, response.message, **(response.additional or {}))
+# /a0/python/tools/memory_delete.py
+from python.helpers.tool import Tool, Response
+        db = await Memory.get(self.agent)
+        dels = await db.delete_documents_by_ids(ids=ids)
+        result = self.agent.read_prompt("fw.memories_deleted.md", memory_count=len(dels))
+        return Response(message=result, break_loop=False)
+# /a0/python/tools/memory_forget.py
+from python.helpers.tool import Tool, Response
+from python.tools.memory_load import DEFAULT_THRESHOLD
+        db = await Memory.get(self.agent)
+        dels = await db.delete_documents_by_query(query=query, threshold=threshold, filter=filter)
+        result = self.agent.read_prompt("fw.memories_deleted.md", memory_count=len(dels))
+        return Response(message=result, break_loop=False)
+# /a0/python/tools/memory_load.py
+from python.helpers.tool import Tool, Response
+        db = await Memory.get(self.agent)
+        docs = await db.search_similarity_threshold(query=query, limit=limit, threshold=threshold, filter=filter)
+            result = self.agent.read_prompt("fw.memories_not_found.md", query=query)
+        return Response(message=result, break_loop=False)
+# /a0/python/tools/memory_save.py
+from python.helpers.tool import Tool, Response
+        db = await Memory.get(self.agent)
+        id = await db.insert_text(text, metadata)
+        result = self.agent.read_prompt("fw.memory_saved.md", memory_id=id)
+        return Response(message=result, break_loop=False)
+# /a0/python/tools/notify_user.py
+from python.helpers.tool import Tool, Response
+from agent import AgentContext
+        priority = self.args.get("priority", NotificationPriority.HIGH) # by default, agents should notify with high priority
+        timeout = int(self.args.get("timeout", 30)) # agent's notifications should have longer timeouts
+            return Response(message=f"Invalid notification type: {notification_type}", break_loop=False)
+            return Response(message=f"Invalid notification priority: {priority}", break_loop=False)
+            return Response(message="Message is required", break_loop=False)
+        AgentContext.get_notification_manager().add_notification(
+        return Response(message=self.agent.read_prompt("fw.notify_user.notification_sent.md"), break_loop=False)
+# /a0/python/tools/response.py
+from python.helpers.tool import Tool, Response
+class ResponseTool(Tool):
+        return Response(message=self.args["text"] if "text" in self.args else self.args["message"], break_loop=True)
+        # self.log = self.agent.context.log.log(type="response", heading=f"{self.agent.agent_name}: Responding", content=self.args.get("text", ""))
+        # don't log here anymore, we have the live_response extension now
+    async def after_execution(self, response, **kwargs):
+        if self.loop_data and "log_item_response" in self.loop_data.params_temporary:
+            log = self.loop_data.params_temporary["log_item_response"]
+# /a0/python/tools/scheduler.py
+from python.helpers.tool import Tool, Response
+from python.helpers.task_scheduler import (
+    TaskScheduler, ScheduledTask, AdHocTask, PlannedTask,
+from agent import AgentContext
+DEFAULT_WAIT_TIMEOUT = 300
+class SchedulerTool(Tool):
+            return await self.list_tasks(**kwargs)
+            return await self.find_task_by_name(**kwargs)
+            return await self.show_task(**kwargs)
+            return await self.run_task(**kwargs)
+            return await self.delete_task(**kwargs)
+            return await self.create_scheduled_task(**kwargs)
+            return await self.create_adhoc_task(**kwargs)
+            return await self.create_planned_task(**kwargs)
+        elif self.method == "wait_for_task":
+            return await self.wait_for_task(**kwargs)
+            return Response(message=f"Unknown method '{self.name}:{self.method}'", break_loop=False)
+        context = self.agent.context
+    async def list_tasks(self, **kwargs) -> Response:
+        tasks: list[ScheduledTask | AdHocTask | PlannedTask] = TaskScheduler.get().get_tasks()
+        return Response(message=json.dumps(filtered_tasks, indent=4), break_loop=False)
+    async def find_task_by_name(self, **kwargs) -> Response:
+            return Response(message="Task name is required", break_loop=False)
+        tasks: list[ScheduledTask | AdHocTask | PlannedTask] = TaskScheduler.get().find_task_by_name(name)
+            return Response(message=f"Task not found: {name}", break_loop=False)
+        return Response(message=json.dumps([serialize_task(task) for task in tasks], indent=4), break_loop=False)
+    async def show_task(self, **kwargs) -> Response:
+            return Response(message="Task UUID is required", break_loop=False)
+        task: ScheduledTask | AdHocTask | PlannedTask | None = TaskScheduler.get().get_task_by_uuid(task_uuid)
+            return Response(message=f"Task not found: {task_uuid}", break_loop=False)
+        return Response(message=json.dumps(serialize_task(task), indent=4), break_loop=False)
+    async def run_task(self, **kwargs) -> Response:
+            return Response(message="Task UUID is required", break_loop=False)
+        task: ScheduledTask | AdHocTask | PlannedTask | None = TaskScheduler.get().get_task_by_uuid(task_uuid)
+            return Response(message=f"Task not found: {task_uuid}", break_loop=False)
+        await TaskScheduler.get().run_task_by_uuid(task_uuid, task_context)
+        if task.context_id == self.agent.context.id:
+        return Response(message=f"Task started: {task_uuid}", break_loop=break_loop)
+    async def delete_task(self, **kwargs) -> Response:
+            return Response(message="Task UUID is required", break_loop=False)
+        task: ScheduledTask | AdHocTask | PlannedTask | None = TaskScheduler.get().get_task_by_uuid(task_uuid)
+            return Response(message=f"Task not found: {task_uuid}", break_loop=False)
+            context = AgentContext.get(task.context_id)
+            await TaskScheduler.get().update_task(task_uuid, state=TaskState.IDLE)
+            await TaskScheduler.get().save()
+            AgentContext.remove(context.id)
+        await TaskScheduler.get().remove_task_by_uuid(task_uuid)
+        if TaskScheduler.get().get_task_by_uuid(task_uuid) is None:
+            return Response(message=f"Task deleted: {task_uuid}", break_loop=False)
+            return Response(message=f"Task failed to delete: {task_uuid}", break_loop=False)
+    async def create_scheduled_task(self, **kwargs) -> Response:
+        #   "system_prompt": "You are a software developer",
+        #   "prompt": "Send the user an email with a greeting using python and smtp. The user's address is: xxx@yyy.zzz",
+        system_prompt: str = kwargs.get("system_prompt", "")
+        prompt: str = kwargs.get("prompt", "")
+        # Validate cron expression, agent might hallucinate
+            return Response(message="Invalid cron expression: " + task_schedule.to_crontab(), break_loop=False)
+            system_prompt=system_prompt,
+            prompt=prompt,
+            context_id=None if dedicated_context else self.agent.context.id,
+        await TaskScheduler.get().add_task(task)
+        return Response(message=f"Scheduled task '{name}' created: {task.uuid}", break_loop=False)
+    async def create_adhoc_task(self, **kwargs) -> Response:
+        system_prompt: str = kwargs.get("system_prompt", "")
+        prompt: str = kwargs.get("prompt", "")
+            system_prompt=system_prompt,
+            prompt=prompt,
+            context_id=None if dedicated_context else self.agent.context.id,
+        await TaskScheduler.get().add_task(task)
+        return Response(message=f"Adhoc task '{name}' created: {task.uuid}", break_loop=False)
+    async def create_planned_task(self, **kwargs) -> Response:
+        system_prompt: str = kwargs.get("system_prompt", "")
+        prompt: str = kwargs.get("prompt", "")
+                return Response(message=f"Invalid datetime: {item}", break_loop=False)
+            system_prompt=system_prompt,
+            prompt=prompt,
+            context_id=None if dedicated_context else self.agent.context.id,
+        await TaskScheduler.get().add_task(task)
+        return Response(message=f"Planned task '{name}' created: {task.uuid}", break_loop=False)
+    async def wait_for_task(self, **kwargs) -> Response:
+            return Response(message="Task UUID is required", break_loop=False)
+        scheduler = TaskScheduler.get()
+        task: ScheduledTask | AdHocTask | PlannedTask | None = scheduler.get_task_by_uuid(task_uuid)
+            return Response(message=f"Task not found: {task_uuid}", break_loop=False)
+        if task.context_id == self.agent.context.id:
+            return Response(message="You can only wait for tasks running in their own dedicated context.", break_loop=False)
+            await scheduler.reload()
+            task = scheduler.get_task_by_uuid(task_uuid)
+                return Response(message=f"Task not found: {task_uuid}", break_loop=False)
+                await asyncio.sleep(1)
+                if elapsed > DEFAULT_WAIT_TIMEOUT:
+                    return Response(message=f"Task wait timeout ({DEFAULT_WAIT_TIMEOUT} seconds): {task_uuid}", break_loop=False)
+        return Response(
+# /a0/python/tools/search_engine.py
+from python.helpers.tool import Tool, Response
+SEARCH_ENGINE_RESULTS = 10
+        searxng_result = await self.searxng_search(query)
+        await self.agent.handle_intervention(
+        )  # wait for intervention and handle it, if paused
+        return Response(message=searxng_result, break_loop=False)
+        results = await searxng(question)
+        return "\n\n".join(outputs[:SEARCH_ENGINE_RESULTS]).strip()
+from python.helpers.tool import Tool, Response
+from python.extensions.system_prompt._10_system_prompt import (
+    get_tools_prompt,
+        tools = get_tools_prompt(self.agent)
+        return Response(
+            message=self.agent.read_prompt(
+                "fw.tool_not_found.md", tool_name=self.name, tools_prompt=tools
+# /a0/python/tools/vision_load.py
+from python.helpers.tool import Tool, Response
+    async def execute(self, paths: list[str] = [], **kwargs) -> Response:
+            if not await runtime.call_development_function(files.exists, str(path)):
+                        file_content = await runtime.call_development_function(
+                        # await runtime.call_development_function(
+                        self.agent.context.log.log("warning", f"Error processing image {path}: {e}")
+        return Response(message="dummy", break_loop=False)
+    async def after_execution(self, response: Response, **kwargs):
+            self.agent.hist_add_message(
+            self.agent.hist_add_tool_result(self.name, "No images processed")
+        ).print(f"{self.agent.agent_name}: Response from tool '{self.name}'")
+# /a0/python/tools/wait.py
+from python.helpers.tool import Tool, Response
+from python.helpers.wait import managed_wait
+class WaitTool(Tool):
+    async def execute(self, **kwargs) -> Response:
+        await self.agent.handle_intervention()
+        is_duration_wait = not bool(until_timestamp_str)
+                return Response(
+            wait_duration = timedelta(
+            if wait_duration.total_seconds() <= 0:
+                return Response(
+                    message="Wait duration must be positive.",
+            target_time = now + wait_duration
+            return Response(
+        PrintStyle.info(f"Waiting until {target_time.isoformat()}...")
+        target_time = await managed_wait(
+            agent=self.agent,
+            is_duration_wait=is_duration_wait,
+        message = self.agent.read_prompt(
+            "fw.wait_complete.md",
+        return Response(
+        return self.agent.context.log.log(
+            text = f"Waiting..."
+        return f"icon://timer Wait: {text}{done_icon}"

@@ -1,0 +1,4 @@
+- [x] Setup environment
+- [ ] Implement feature A
+- [ ] Write tests
+... (to be continued)

@@ -1,0 +1,7 @@
+Incomplete: True
+Tasks: {'completed': ['- [x] Setup environment'], 'remaining': ['- [ ] Implement feature A', '- [ ] Write tests']}
+Continuation prompt:
+ The previous response was incomplete. Please continue the task.
+Remaining subtasks:
+- - [ ] Implement feature A
+- - [ ] Write tests

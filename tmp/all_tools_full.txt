@@ -1,0 +1,1822 @@
+# /a0/python/tools/a2a_chat.py
+from python.helpers.tool import Tool, Response
+from python.helpers.print_style import PrintStyle
+from python.helpers.fasta2a_client import connect_to_agent, is_client_available
+
+
+class A2AChatTool(Tool):
+    """Communicate with another FastA2A-compatible agent."""
+
+    async def execute(self, **kwargs):
+        if not is_client_available():
+            return Response(message="FastA2A client not available on this instance.", break_loop=False)
+
+        agent_url: str | None = kwargs.get("agent_url")  # required
+        user_message: str | None = kwargs.get("message")  # required
+        attachments = kwargs.get("attachments", None)  # optional list[str]
+        reset = bool(kwargs.get("reset", False))
+        if not agent_url or not isinstance(agent_url, str):
+            return Response(message="agent_url argument missing", break_loop=False)
+        if not user_message or not isinstance(user_message, str):
+            return Response(message="message argument missing", break_loop=False)
+
+        # Retrieve or create session cache on the Agent instance
+        sessions: dict[str, str] = self.agent.get_data("_a2a_sessions") or {}
+
+        # Handle reset flag – start fresh conversation
+        if reset and agent_url in sessions:
+            sessions.pop(agent_url, None)
+
+        context_id = None if reset else sessions.get(agent_url)
+        try:
+            async with await connect_to_agent(agent_url) as conn:
+                task_resp = await conn.send_message(user_message, attachments=attachments, context_id=context_id)
+                task_id = task_resp.get("result", {}).get("id")  # type: ignore[index]
+                if not task_id:
+                    return Response(message="Remote agent failed to create task.", break_loop=False)
+                final = await conn.wait_for_completion(task_id)
+                new_context_id = final["result"].get("context_id")  # type: ignore[index]
+                if isinstance(new_context_id, str):
+                    sessions[agent_url] = new_context_id
+                    # persist back to agent data
+                    self.agent.set_data("_a2a_sessions", sessions)
+                # Extract latest assistant text
+                history = final["result"].get("history", [])
+                assistant_text = ""
+                if history:
+                    last_parts = history[-1].get("parts", [])
+                    assistant_text = "\n".join(
+                        p.get("text", "") for p in last_parts if p.get("kind") == "text"
+                    )
+                return Response(message=assistant_text or "(no response)", break_loop=False)
+        except Exception as e:
+            PrintStyle.error(f"A2A chat error: {e}")
+            return Response(message=f"A2A chat error: {e}", break_loop=False)
+
+# /a0/python/tools/behaviour_adjustment.py
+from python.helpers import files, memory
+from python.helpers.tool import Tool, Response
+from agent import Agent
+from python.helpers.log import LogItem
+
+
+class UpdateBehaviour(Tool):
+
+    async def execute(self, adjustments="", **kwargs):
+
+        # stringify adjustments if needed
+        if not isinstance(adjustments, str):
+            adjustments = str(adjustments)
+
+        await update_behaviour(self.agent, self.log, adjustments)
+        return Response(
+            message=self.agent.read_prompt("behaviour.updated.md"), break_loop=False
+        )
+
+    # async def before_execution(self, **kwargs):
+    #     pass
+
+    # async def after_execution(self, response, **kwargs):
+    #     pass
+
+
+async def update_behaviour(agent: Agent, log_item: LogItem, adjustments: str):
+
+    # get system message and current ruleset
+    system = agent.read_prompt("behaviour.merge.sys.md")
+    current_rules = read_rules(agent)
+
+    # log query streamed by LLM
+    async def log_callback(content):
+        log_item.stream(ruleset=content)
+
+    msg = agent.read_prompt(
+        "behaviour.merge.msg.md", current_rules=current_rules, adjustments=adjustments
+    )
+
+    # call util llm to find solutions in history
+    adjustments_merge = await agent.call_utility_model(
+        system=system,
+        message=msg,
+        callback=log_callback,
+    )
+
+    # update rules file
+    rules_file = get_custom_rules_file(agent)
+    files.write_file(rules_file, adjustments_merge)
+    log_item.update(result="Behaviour updated")
+
+
+def get_custom_rules_file(agent: Agent):
+    return files.get_abs_path(memory.get_memory_subdir_abs(agent), "behaviour.md")
+
+
+def read_rules(agent: Agent):
+    rules_file = get_custom_rules_file(agent)
+    if files.exists(rules_file):
+        rules = files.read_prompt_file(rules_file)
+        return agent.read_prompt("agent.system.behaviour.md", rules=rules)
+    else:
+        rules = agent.read_prompt("agent.system.behaviour_default.md")
+        return agent.read_prompt("agent.system.behaviour.md", rules=rules)
+
+# /a0/python/tools/browser_agent.py
+import asyncio
+import time
+from typing import Optional, cast
+from agent import Agent, InterventionException
+from pathlib import Path
+
+from python.helpers.tool import Tool, Response
+from python.helpers import files, defer, persist_chat, strings
+from python.helpers.browser_use import browser_use  # type: ignore[attr-defined]
+from python.helpers.print_style import PrintStyle
+from python.helpers.playwright import ensure_playwright_binary
+from python.helpers.secrets import get_secrets_manager
+from python.extensions.message_loop_start._10_iteration_no import get_iter_no
+from pydantic import BaseModel
+import uuid
+from python.helpers.dirty_json import DirtyJson
+
+
+class State:
+    @staticmethod
+    async def create(agent: Agent):
+        state = State(agent)
+        return state
+
+    def __init__(self, agent: Agent):
+        self.agent = agent
+        self.browser_session: Optional[browser_use.BrowserSession] = None
+        self.task: Optional[defer.DeferredTask] = None
+        self.use_agent: Optional[browser_use.Agent] = None
+        self.secrets_dict: Optional[dict[str, str]] = None
+        self.iter_no = 0
+
+    def __del__(self):
+        self.kill_task()
+        files.delete_dir(self.get_user_data_dir()) # cleanup user data dir
+
+    def get_user_data_dir(self):
+        return str(
+            Path.home()
+            / ".config"
+            / "browseruse"
+            / "profiles"
+            / f"agent_{self.agent.context.id}"
+        )
+
+    async def _initialize(self):
+        if self.browser_session:
+            return
+
+        # for some reason we need to provide exact path to headless shell, otherwise it looks for headed browser
+        pw_binary = ensure_playwright_binary()
+                
+        self.browser_session = browser_use.BrowserSession(
+            browser_profile=browser_use.BrowserProfile(
+                headless=True,
+                disable_security=True,
+                chromium_sandbox=False,
+                accept_downloads=True,
+                downloads_path=files.get_abs_path("tmp/downloads"),
+                allowed_domains=["*", "http://*", "https://*"],
+                executable_path=pw_binary,
+                keep_alive=True,
+                minimum_wait_page_load_time=1.0,
+                wait_for_network_idle_page_load_time=2.0,
+                maximum_wait_page_load_time=10.0,
+                window_size={"width": 1024, "height": 2048},
+                screen={"width": 1024, "height": 2048},
+                viewport={"width": 1024, "height": 2048},
+                no_viewport=False,
+                args=["--headless=new"],
+                # Use a unique user data directory to avoid conflicts
+                user_data_dir=self.get_user_data_dir(),
+                extra_http_headers=self.agent.config.browser_http_headers or {},
+                )
+        )
+
+        await self.browser_session.start() if self.browser_session else None
+        # self.override_hooks()
+
+        # --------------------------------------------------------------------------
+        # Patch to enforce vertical viewport size
+        # --------------------------------------------------------------------------
+        # Browser-use auto-configuration overrides viewport settings, causing wrong
+        # aspect ratio. We fix this by directly setting viewport size after startup.
+        # --------------------------------------------------------------------------
+
+        if self.browser_session:
+            try:
+                page = await self.browser_session.get_current_page()
+                if page:
+                    await page.set_viewport_size({"width": 1024, "height": 2048})
+            except Exception as e:
+                PrintStyle().warning(f"Could not force set viewport size: {e}")
+
+        # --------------------------------------------------------------------------    
+        
+        # Add init script to the browser session
+        if self.browser_session and self.browser_session.browser_context:
+            js_override = files.get_abs_path("lib/browser/init_override.js")
+            await self.browser_session.browser_context.add_init_script(path=js_override) if self.browser_session else None
+
+    def start_task(self, task: str):
+        if self.task and self.task.is_alive():
+            self.kill_task()
+
+        self.task = defer.DeferredTask(
+            thread_name="BrowserAgent" + self.agent.context.id
+        )
+        if self.agent.context.task:
+            self.agent.context.task.add_child_task(self.task, terminate_thread=True)
+        self.task.start_task(self._run_task, task) if self.task else None
+        return self.task
+
+    def kill_task(self):
+        if self.task:
+            self.task.kill(terminate_thread=True)
+            self.task = None
+        if self.browser_session:
+            try:
+                import asyncio
+
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                loop.run_until_complete(self.browser_session.close()) if self.browser_session else None
+                loop.close()
+            except Exception as e:
+                PrintStyle().error(f"Error closing browser session: {e}")
+            finally:
+                self.browser_session = None
+        self.use_agent = None
+        self.iter_no = 0
+
+    async def _run_task(self, task: str):
+        await self._initialize()
+
+        class DoneResult(BaseModel):
+            title: str
+            response: str
+            page_summary: str
+
+        # Initialize controller
+        controller = browser_use.Controller(output_model=DoneResult)
+
+        # Register custom completion action with proper ActionResult fields
+        @controller.registry.action("Complete task", param_model=DoneResult)
+        async def complete_task(params: DoneResult):
+            result = browser_use.ActionResult(
+                is_done=True, success=True, extracted_content=params.model_dump_json()
+            )
+            return result
+
+        model = self.agent.get_browser_model()
+
+        try:
+
+            secrets_manager = get_secrets_manager(self.agent.context)
+            secrets_dict = secrets_manager.load_secrets()
+
+            self.use_agent = browser_use.Agent(
+                task=task,
+                browser_session=self.browser_session,
+                llm=model,
+                use_vision=self.agent.config.browser_model.vision,
+                extend_system_message=self.agent.read_prompt(
+                    "prompts/browser_agent.system.md"
+                ),
+                controller=controller,
+                enable_memory=False,  # Disable memory to avoid state conflicts
+                llm_timeout=3000, # TODO rem
+                sensitive_data=cast(dict[str, str | dict[str, str]] | None, secrets_dict or {}),  # Pass secrets
+            )
+        except Exception as e:
+            raise Exception(
+                f"Browser agent initialization failed. This might be due to model compatibility issues. Error: {e}"
+            ) from e
+
+        self.iter_no = get_iter_no(self.agent)
+
+        async def hook(agent: browser_use.Agent):
+            await self.agent.wait_if_paused()
+            if self.iter_no != get_iter_no(self.agent):
+                raise InterventionException("Task cancelled")
+
+        # try:
+        result = None
+        if self.use_agent:
+            result = await self.use_agent.run(
+                max_steps=50, on_step_start=hook, on_step_end=hook
+            )
+        return result
+
+    async def get_page(self):
+        if self.use_agent and self.browser_session:
+            try:
+                return await self.use_agent.browser_session.get_current_page() if self.use_agent.browser_session else None
+            except Exception:
+                # Browser session might be closed or invalid
+                return None
+        return None
+
+    async def get_selector_map(self):
+        """Get the selector map for the current page state."""
+        if self.use_agent:
+            await self.use_agent.browser_session.get_state_summary(cache_clickable_elements_hashes=True) if self.use_agent.browser_session else None
+            return await self.use_agent.browser_session.get_selector_map() if self.use_agent.browser_session else None
+            await self.use_agent.browser_session.get_state_summary(
+                cache_clickable_elements_hashes=True
+            )
+            return await self.use_agent.browser_session.get_selector_map()
+        return {}
+
+
+class BrowserAgent(Tool):
+
+    async def execute(self, message="", reset="", **kwargs):
+        self.guid = self.agent.context.generate_id() # short random id
+        reset = str(reset).lower().strip() == "true"
+        await self.prepare_state(reset=reset)
+        message = get_secrets_manager(self.agent.context).mask_values(message, placeholder="<secret>{key}</secret>") # mask any potential passwords passed from A0 to browser-use to browser-use format
+        task = self.state.start_task(message) if self.state else None
+
+        # wait for browser agent to finish and update progress with timeout
+        timeout_seconds = 300  # 5 minute timeout
+        start_time = time.time()
+
+        fail_counter = 0
+        while not task.is_ready() if task else False:
+            # Check for timeout to prevent infinite waiting
+            if time.time() - start_time > timeout_seconds:
+                PrintStyle().warning(
+                    self._mask(f"Browser agent task timeout after {timeout_seconds} seconds, forcing completion")
+                )
+                break
+
+            await self.agent.handle_intervention()
+            await asyncio.sleep(1)
+            try:
+                if task and task.is_ready():  # otherwise get_update hangs
+                    break
+                try:
+                    update = await asyncio.wait_for(self.get_update(), timeout=10)
+                    fail_counter = 0  # reset on success
+                except asyncio.TimeoutError:
+                    fail_counter += 1
+                    PrintStyle().warning(
+                        self._mask(f"browser_agent.get_update timed out ({fail_counter}/3)")
+                    )
+                    if fail_counter >= 3:
+                        PrintStyle().warning(
+                            self._mask("3 consecutive browser_agent.get_update timeouts, breaking loop")
+                        )
+                        break
+                    continue
+                update_log = update.get("log", get_use_agent_log(None))
+                self.update_progress("\n".join(update_log))
+                screenshot = update.get("screenshot", None)
+                if screenshot:
+                    self.log.update(screenshot=screenshot)
+            except Exception as e:
+                PrintStyle().error(self._mask(f"Error getting update: {str(e)}"))
+
+        if task and not task.is_ready():
+            PrintStyle().warning(self._mask("browser_agent.get_update timed out, killing the task"))
+            self.state.kill_task() if self.state else None
+            return Response(
+                message=self._mask("Browser agent task timed out, not output provided."),
+                break_loop=False,
+            )
+
+        # final progress update
+        if self.state and self.state.use_agent:
+            log_final = get_use_agent_log(self.state.use_agent)
+            self.update_progress("\n".join(log_final))
+
+        # collect result with error handling
+        try:
+            result = await task.result() if task else None
+        except Exception as e:
+            PrintStyle().error(self._mask(f"Error getting browser agent task result: {str(e)}"))
+            # Return a timeout response if task.result() fails
+            answer_text = self._mask(f"Browser agent task failed to return result: {str(e)}")
+            self.log.update(answer=answer_text)
+            return Response(message=answer_text, break_loop=False)
+        # finally:
+        #     # Stop any further browser access after task completion
+        #     # self.state.kill_task()
+        #     pass
+
+        # Check if task completed successfully
+        if result and result.is_done():
+            answer = result.final_result()
+            try:
+                if answer and isinstance(answer, str) and answer.strip():
+                    answer_data = DirtyJson.parse_string(answer)
+                    answer_text = strings.dict_to_text(answer_data)  # type: ignore
+                else:
+                    answer_text = (
+                        str(answer) if answer else "Task completed successfully"
+                    )
+            except Exception as e:
+                answer_text = (
+                    str(answer)
+                    if answer
+                    else f"Task completed with parse error: {str(e)}"
+                )
+        else:
+            # Task hit max_steps without calling done()
+            urls = result.urls() if result else []
+            current_url = urls[-1] if urls else "unknown"
+            answer_text = (
+                f"Task reached step limit without completion. Last page: {current_url}. "
+                f"The browser agent may need clearer instructions on when to finish."
+            )
+
+        # Mask answer for logs and response
+        answer_text = self._mask(answer_text)
+
+        # update the log (without screenshot path here, user can click)
+        self.log.update(answer=answer_text)
+
+        # add screenshot to the answer if we have it
+        if (
+            self.log.kvps
+            and "screenshot" in self.log.kvps
+            and self.log.kvps["screenshot"]
+        ):
+            path = self.log.kvps["screenshot"].split("//", 1)[-1].split("&", 1)[0]
+            answer_text += f"\n\nScreenshot: {path}"
+
+        # respond (with screenshot path)
+        return Response(message=answer_text, break_loop=False)
+
+    def get_log_object(self):
+        return self.agent.context.log.log(
+            type="browser",
+            heading=f"icon://captive_portal {self.agent.agent_name}: Calling Browser Agent",
+            content="",
+            kvps=self.args,
+        )
+
+    async def get_update(self):
+        await self.prepare_state()
+
+        result = {}
+        agent = self.agent
+        ua = self.state.use_agent if self.state else None
+        page = await self.state.get_page() if self.state else None
+
+        if ua and page:
+            try:
+
+                async def _get_update():
+
+                    # await agent.wait_if_paused() # no need here
+
+                    # Build short activity log
+                    result["log"] = get_use_agent_log(ua)
+
+                    path = files.get_abs_path(
+                        persist_chat.get_chat_folder_path(agent.context.id),
+                        "browser",
+                        "screenshots",
+                        f"{self.guid}.png",
+                    )
+                    files.make_dirs(path)
+                    await page.screenshot(path=path, full_page=False, timeout=3000)
+                    result["screenshot"] = f"img://{path}&t={str(time.time())}"
+
+                if self.state and self.state.task and not self.state.task.is_ready():
+                    await self.state.task.execute_inside(_get_update)
+
+            except Exception:
+                pass
+
+        return result
+
+    async def prepare_state(self, reset=False):
+        self.state = self.agent.get_data("_browser_agent_state")
+        if reset and self.state:
+            self.state.kill_task()
+        if not self.state or reset:
+            self.state = await State.create(self.agent)
+        self.agent.set_data("_browser_agent_state", self.state)
+
+    def update_progress(self, text):
+        text = self._mask(text)
+        short = text.split("\n")[-1]
+        if len(short) > 50:
+            short = short[:50] + "..."
+        progress = f"Browser: {short}"
+
+        self.log.update(progress=text)
+        self.agent.context.log.set_progress(progress)
+
+    def _mask(self, text: str) -> str:
+        try:
+            return get_secrets_manager(self.agent.context).mask_values(text or "")
+        except Exception as e:
+            return text or ""
+
+    # def __del__(self):
+    #     if self.state:
+    #         self.state.kill_task()
+
+
+def get_use_agent_log(use_agent: browser_use.Agent | None):
+    result = ["🚦 Starting task"]
+    if use_agent:
+        action_results = use_agent.history.action_results() or []
+        short_log = []
+        for item in action_results:
+            # final results
+            if item.is_done:
+                if item.success:
+                    short_log.append("✅ Done")
+                else:
+                    short_log.append(
+                        f"❌ Error: {item.error or item.extracted_content or 'Unknown error'}"
+                    )
+
+            # progress messages
+            else:
+                text = item.extracted_content
+                if text:
+                    first_line = text.split("\n", 1)[0][:200]
+                    short_log.append(first_line)
+        result.extend(short_log)
+    return result
+
+# /a0/python/tools/call_subordinate.py
+from agent import Agent, UserMessage
+from python.helpers.tool import Tool, Response
+from initialize import initialize_agent
+from python.extensions.hist_add_tool_result import _90_save_tool_call_file as save_tool_call_file
+
+
+class Delegation(Tool):
+
+    async def execute(self, message="", reset="", **kwargs):
+        # create subordinate agent using the data object on this agent and set superior agent to his data object
+        if (
+            self.agent.get_data(Agent.DATA_NAME_SUBORDINATE) is None
+            or str(reset).lower().strip() == "true"
+        ):
+            # initialize default config
+            config = initialize_agent()
+
+            # set subordinate prompt profile if provided, if not, keep original
+            agent_profile = kwargs.get("profile")
+            if agent_profile:
+                config.profile = agent_profile
+
+            # crate agent
+            sub = Agent(self.agent.number + 1, config, self.agent.context)
+            # register superior/subordinate
+            sub.set_data(Agent.DATA_NAME_SUPERIOR, self.agent)
+            self.agent.set_data(Agent.DATA_NAME_SUBORDINATE, sub)
+
+        # add user message to subordinate agent
+        subordinate: Agent = self.agent.get_data(Agent.DATA_NAME_SUBORDINATE)  # type: ignore
+        subordinate.hist_add_user_message(UserMessage(message=message, attachments=[]))
+
+        # run subordinate monologue
+        result = await subordinate.monologue()
+
+        # hint to use includes for long responses
+        additional = None
+        if len(result) >= save_tool_call_file.LEN_MIN:
+            hint = self.agent.read_prompt("fw.hint.call_sub.md")
+            if hint:
+                additional = {"hint": hint}
+
+        # result
+        return Response(message=result, break_loop=False, additional=additional)
+
+    def get_log_object(self):
+        return self.agent.context.log.log(
+            type="tool",
+            heading=f"icon://communication {self.agent.agent_name}: Calling Subordinate Agent",
+            content="",
+            kvps=self.args,
+        )
+
+# /a0/python/tools/code_execution_tool.py
+import asyncio
+from dataclasses import dataclass
+import shlex
+import time
+from python.helpers.tool import Tool, Response
+from python.helpers import files, rfc_exchange, projects, runtime
+from python.helpers.print_style import PrintStyle
+from python.helpers.shell_local import LocalInteractiveSession
+from python.helpers.shell_ssh import SSHInteractiveSession
+from python.helpers.docker import DockerContainerManager
+from python.helpers.strings import truncate_text as truncate_text_string
+from python.helpers.messages import truncate_text as truncate_text_agent
+import re
+
+# Timeouts for python, nodejs, and terminal runtimes.
+CODE_EXEC_TIMEOUTS: dict[str, int] = {
+    "first_output_timeout": 30,
+    "between_output_timeout": 15,
+    "max_exec_timeout": 180,
+    "dialog_timeout": 5,
+}
+
+# Timeouts for output runtime.
+OUTPUT_TIMEOUTS: dict[str, int] = {
+    "first_output_timeout": 90,
+    "between_output_timeout": 45,
+    "max_exec_timeout": 300,
+    "dialog_timeout": 5,
+}
+
+@dataclass
+class ShellWrap:
+    id: int
+    session: LocalInteractiveSession | SSHInteractiveSession
+    running: bool
+
+@dataclass
+class State:
+    ssh_enabled: bool
+    shells: dict[int, ShellWrap]
+
+
+class CodeExecution(Tool):
+
+    # Common shell prompt regex patterns (add more as needed)
+    prompt_patterns = [
+        re.compile(r"\\(venv\\).+[$#] ?$"),  # (venv) ...$ or (venv) ...#
+        re.compile(r"root@[^:]+:[^#]+# ?$"),  # root@container:~#
+        re.compile(r"[a-zA-Z0-9_.-]+@[^:]+:[^$#]+[$#] ?$"),  # user@host:~$
+        re.compile(r"\(?.*\)?\s*PS\s+[^>]+> ?$"),  # PowerShell prompt like (base) PS C:\...>
+    ]
+    # potential dialog detection
+    dialog_patterns = [
+        re.compile(r"Y/N", re.IGNORECASE),  # Y/N anywhere in line
+        re.compile(r"yes/no", re.IGNORECASE),  # yes/no anywhere in line
+        re.compile(r":\s*$"),  # line ending with colon
+        re.compile(r"\?\s*$"),  # line ending with question mark
+    ]
+
+    async def execute(self, **kwargs) -> Response:
+
+        await self.agent.handle_intervention()  # wait for intervention and handle it, if paused
+
+        runtime = self.args.get("runtime", "").lower().strip()
+        session = int(self.args.get("session", 0))
+        self.allow_running = bool(self.args.get("allow_running", False))
+
+        if runtime == "python":
+            response = await self.execute_python_code(
+                code=self.args["code"], session=session
+            )
+        elif runtime == "nodejs":
+            response = await self.execute_nodejs_code(
+                code=self.args["code"], session=session
+            )
+        elif runtime == "terminal":
+            response = await self.execute_terminal_command(
+                command=self.args["code"], session=session
+            )
+        elif runtime == "output":
+            response = await self.get_terminal_output(
+                session=session, timeouts=OUTPUT_TIMEOUTS
+            )
+        elif runtime == "reset":
+            response = await self.reset_terminal(session=session)
+        else:
+            response = self.agent.read_prompt(
+                "fw.code.runtime_wrong.md", runtime=runtime
+            )
+
+        if not response:
+            response = self.agent.read_prompt(
+                "fw.code.info.md", info=self.agent.read_prompt("fw.code.no_output.md")
+            )
+        return Response(message=response, break_loop=False)
+
+    def get_log_object(self):
+        return self.agent.context.log.log(
+            type="code_exe",
+            heading=self.get_heading(),
+            content="",
+            kvps=self.args,
+        )
+
+    def get_heading(self, text: str = ""):
+        if not text:
+            text = f"{self.name} - {self.args['runtime'] if 'runtime' in self.args else 'unknown'}"
+        # text = truncate_text_string(text, 60) # don't truncate here, log.py takes care of it
+        session = self.args.get("session", None)
+        session_text = f"[{session}] " if session or session == 0 else ""
+        return f"icon://terminal {session_text}{text}"
+
+    async def after_execution(self, response, **kwargs):
+        self.agent.hist_add_tool_result(self.name, response.message, **(response.additional or {}))
+
+    async def prepare_state(self, reset=False, session: int | None = None):
+        self.state: State | None = self.agent.get_data("_cet_state")
+        # always reset state when ssh_enabled changes
+        if not self.state or self.state.ssh_enabled != self.agent.config.code_exec_ssh_enabled:
+            # initialize shells dictionary if not exists
+            shells: dict[int, ShellWrap] = {}
+        else:
+            shells = self.state.shells.copy()
+
+        # Only reset the specified session if provided
+        if reset and session is not None and session in shells:
+            await shells[session].session.close()
+            del shells[session]
+        elif reset and not session:
+            # Close all sessions if full reset requested
+            for s in list(shells.keys()):
+                await shells[s].session.close()
+            shells = {}
+
+        # initialize local or remote interactive shell interface for session 0 if needed
+        if session is not None and session not in shells:
+            if self.agent.config.code_exec_ssh_enabled:
+                pswd = (
+                    self.agent.config.code_exec_ssh_pass
+                    if self.agent.config.code_exec_ssh_pass
+                    else await rfc_exchange.get_root_password()
+                )
+                shell = SSHInteractiveSession(
+                    self.agent.context.log,
+                    self.agent.config.code_exec_ssh_addr,
+                    self.agent.config.code_exec_ssh_port,
+                    self.agent.config.code_exec_ssh_user,
+                    pswd,
+                    cwd=self.get_cwd(),
+                )
+            else:
+                shell = LocalInteractiveSession(cwd=self.get_cwd())
+
+            shells[session] = ShellWrap(id=session, session=shell, running=False)
+            await shell.connect()
+
+        self.state = State(shells=shells, ssh_enabled=self.agent.config.code_exec_ssh_enabled)
+        self.agent.set_data("_cet_state", self.state)
+        return self.state
+
+    async def execute_python_code(self, session: int, code: str, reset: bool = False):
+        escaped_code = shlex.quote(code)
+        command = f"ipython -c {escaped_code}"
+        prefix = "python> " + self.format_command_for_output(code) + "\n\n"
+        return await self.terminal_session(session, command, reset, prefix)
+
+    async def execute_nodejs_code(self, session: int, code: str, reset: bool = False):
+        escaped_code = shlex.quote(code)
+        command = f"node /exe/node_eval.js {escaped_code}"
+        prefix = "node> " + self.format_command_for_output(code) + "\n\n"
+        return await self.terminal_session(session, command, reset, prefix)
+
+    async def execute_terminal_command(
+        self, session: int, command: str, reset: bool = False
+    ):
+        prefix = ("bash>" if not runtime.is_windows() or self.agent.config.code_exec_ssh_enabled else "PS>") + self.format_command_for_output(command) + "\n\n"
+        return await self.terminal_session(session, command, reset, prefix)
+
+    async def terminal_session(
+        self, session: int, command: str, reset: bool = False, prefix: str = "", timeouts: dict | None = None
+    ):
+
+        self.state = await self.prepare_state(reset=reset, session=session)
+
+        await self.agent.handle_intervention()  # wait for intervention and handle it, if paused
+
+        # Check if session is running and handle it
+        if not self.allow_running:
+            if response := await self.handle_running_session(session):
+                return response
+        
+        # try again on lost connection
+        for i in range(2):
+            try:
+
+                self.state.shells[session].running = True
+                await self.state.shells[session].session.send_command(command)
+
+                locl = (
+                    " (local)"
+                    if isinstance(self.state.shells[session].session, LocalInteractiveSession)
+                    else (
+                        " (remote)"
+                        if isinstance(self.state.shells[session].session, SSHInteractiveSession)
+                        else " (unknown)"
+                    )
+                )
+
+                PrintStyle(
+                    background_color="white", font_color="#1B4F72", bold=True
+                ).print(f"{self.agent.agent_name} code execution output{locl}")
+                return await self.get_terminal_output(session=session, prefix=prefix, timeouts=(timeouts or CODE_EXEC_TIMEOUTS))
+
+            except Exception as e:
+                if i == 1:
+                    # try again on lost connection
+                    PrintStyle.error(str(e))
+                    await self.prepare_state(reset=True, session=session)
+                    continue
+                else:
+                    raise e
+
+    def format_command_for_output(self, command: str):
+        # truncate long commands
+        short_cmd = command[:200]
+        # normalize whitespace for cleaner output
+        short_cmd = " ".join(short_cmd.split())
+        # replace any sequence of ', ", or ` with a single '
+        # short_cmd = re.sub(r"['\"`]+", "'", short_cmd) # no need anymore
+        # final length
+        short_cmd = truncate_text_string(short_cmd, 100)
+        return f"{short_cmd}"
+
+    async def get_terminal_output(
+        self,
+        session=0,
+        reset_full_output=True,
+        first_output_timeout=30,  # Wait up to x seconds for first output
+        between_output_timeout=15,  # Wait up to x seconds between outputs
+        dialog_timeout=5,  # potential dialog detection timeout
+        max_exec_timeout=180,  # hard cap on total runtime
+        sleep_time=0.1,
+        prefix="",
+        timeouts: dict | None = None,
+    ):
+
+        # if not self.state:
+        self.state = await self.prepare_state(session=session)
+
+        # Override timeouts if a dict is provided
+        if timeouts:
+            first_output_timeout = timeouts.get("first_output_timeout", first_output_timeout)
+            between_output_timeout = timeouts.get("between_output_timeout", between_output_timeout)
+            dialog_timeout = timeouts.get("dialog_timeout", dialog_timeout)
+            max_exec_timeout = timeouts.get("max_exec_timeout", max_exec_timeout)
+
+        start_time = time.time()
+        last_output_time = start_time
+        full_output = ""
+        truncated_output = ""
+        got_output = False
+
+        # if prefix, log right away
+        if prefix:
+            self.log.update(content=prefix)
+
+        while True:
+            await asyncio.sleep(sleep_time)
+            full_output, partial_output = await self.state.shells[session].session.read_output(
+                timeout=1, reset_full_output=reset_full_output
+            )
+            reset_full_output = False  # only reset once
+
+            await self.agent.handle_intervention()
+
+            now = time.time()
+            if partial_output:
+                PrintStyle(font_color="#85C1E9").stream(partial_output)
+                # full_output += partial_output # Append new output
+                truncated_output = self.fix_full_output(full_output)
+                self.set_progress(truncated_output)
+                heading = self.get_heading_from_output(truncated_output, 0)
+                self.log.update(content=prefix + truncated_output, heading=heading)
+                last_output_time = now
+                got_output = True
+
+                # Check for shell prompt at the end of output
+                last_lines = (
+                    truncated_output.splitlines()[-3:] if truncated_output else []
+                )
+                last_lines.reverse()
+                for idx, line in enumerate(last_lines):
+                    for pat in self.prompt_patterns:
+                        if pat.search(line.strip()):
+                            PrintStyle.info(
+                                "Detected shell prompt, returning output early."
+                            )
+                            last_lines.reverse()
+                            heading = self.get_heading_from_output(
+                                "\n".join(last_lines), idx + 1, True
+                            )
+                            self.log.update(heading=heading)
+                            self.mark_session_idle(session)
+                            return truncated_output
+
+            # Check for max execution time
+            if now - start_time > max_exec_timeout:
+                sysinfo = self.agent.read_prompt(
+                    "fw.code.max_time.md", timeout=max_exec_timeout
+                )
+                response = self.agent.read_prompt("fw.code.info.md", info=sysinfo)
+                if truncated_output:
+                    response = truncated_output + "\n\n" + response
+                PrintStyle.warning(sysinfo)
+                heading = self.get_heading_from_output(truncated_output, 0)
+                self.log.update(content=prefix + response, heading=heading)
+                return response
+
+            # Waiting for first output
+            if not got_output:
+                if now - start_time > first_output_timeout:
+                    sysinfo = self.agent.read_prompt(
+                        "fw.code.no_out_time.md", timeout=first_output_timeout
+                    )
+                    response = self.agent.read_prompt("fw.code.info.md", info=sysinfo)
+                    PrintStyle.warning(sysinfo)
+                    self.log.update(content=prefix + response)
+                    return response
+            else:
+                # Waiting for more output after first output
+                if now - last_output_time > between_output_timeout:
+                    sysinfo = self.agent.read_prompt(
+                        "fw.code.pause_time.md", timeout=between_output_timeout
+                    )
+                    response = self.agent.read_prompt("fw.code.info.md", info=sysinfo)
+                    if truncated_output:
+                        response = truncated_output + "\n\n" + response
+                    PrintStyle.warning(sysinfo)
+                    heading = self.get_heading_from_output(truncated_output, 0)
+                    self.log.update(content=prefix + response, heading=heading)
+                    return response
+
+                # potential dialog detection
+                if now - last_output_time > dialog_timeout:
+                    # Check for dialog prompt at the end of output
+                    last_lines = (
+                        truncated_output.splitlines()[-2:] if truncated_output else []
+                    )
+                    for line in last_lines:
+                        for pat in self.dialog_patterns:
+                            if pat.search(line.strip()):
+                                PrintStyle.info(
+                                    "Detected dialog prompt, returning output early."
+                                )
+
+                                sysinfo = self.agent.read_prompt(
+                                    "fw.code.pause_dialog.md", timeout=dialog_timeout
+                                )
+                                response = self.agent.read_prompt(
+                                    "fw.code.info.md", info=sysinfo
+                                )
+                                if truncated_output:
+                                    response = truncated_output + "\n\n" + response
+                                PrintStyle.warning(sysinfo)
+                                heading = self.get_heading_from_output(
+                                    truncated_output, 0
+                                )
+                                self.log.update(
+                                    content=prefix + response, heading=heading
+                                )
+                                return response
+
+    async def handle_running_session(
+        self,
+        session=0,
+        reset_full_output=True, 
+        prefix=""
+    ):
+        if not self.state or session not in self.state.shells:
+            return None
+        if not self.state.shells[session].running:
+            return None
+        
+        full_output, _ = await self.state.shells[session].session.read_output(
+            timeout=1, reset_full_output=reset_full_output
+        )
+        truncated_output = self.fix_full_output(full_output)
+        self.set_progress(truncated_output)
+        heading = self.get_heading_from_output(truncated_output, 0)
+
+        last_lines = (
+            truncated_output.splitlines()[-3:] if truncated_output else []
+        )
+        last_lines.reverse()
+        for idx, line in enumerate(last_lines):
+            for pat in self.prompt_patterns:
+                if pat.search(line.strip()):
+                    PrintStyle.info(
+                        "Detected shell prompt, returning output early."
+                    )
+                    self.mark_session_idle(session)
+                    return None
+
+        has_dialog = False 
+        for line in last_lines:
+            for pat in self.dialog_patterns:
+                if pat.search(line.strip()):
+                    has_dialog = True
+                    break
+            if has_dialog:
+                break
+
+        if has_dialog:
+            sys_info = self.agent.read_prompt("fw.code.pause_dialog.md", timeout=1)       
+        else:
+            sys_info = self.agent.read_prompt("fw.code.running.md", session=session)
+
+        response = self.agent.read_prompt("fw.code.info.md", info=sys_info)
+        if truncated_output:
+            response = truncated_output + "\n\n" + response
+        PrintStyle(font_color="#FFA500", bold=True).print(response)
+        self.log.update(content=prefix + response, heading=heading)
+        return response
+    
+    def mark_session_idle(self, session: int = 0):
+        # Mark session as idle - command finished
+        if self.state and session in self.state.shells:
+            self.state.shells[session].running = False
+
+    async def reset_terminal(self, session=0, reason: str | None = None):
+        # Print the reason for the reset to the console if provided
+        if reason:
+            PrintStyle(font_color="#FFA500", bold=True).print(
+                f"Resetting terminal session {session}... Reason: {reason}"
+            )
+        else:
+            PrintStyle(font_color="#FFA500", bold=True).print(
+                f"Resetting terminal session {session}..."
+            )
+
+        # Only reset the specified session while preserving others
+        await self.prepare_state(reset=True, session=session)
+        response = self.agent.read_prompt(
+            "fw.code.info.md", info=self.agent.read_prompt("fw.code.reset.md")
+        )
+        self.log.update(content=response)
+        return response
+
+    def get_heading_from_output(self, output: str, skip_lines=0, done=False):
+        done_icon = " icon://done_all" if done else ""
+
+        if not output:
+            return self.get_heading() + done_icon
+
+        # find last non-empty line with skip
+        lines = output.splitlines()
+        # Start from len(lines) - skip_lines - 1 down to 0
+        for i in range(len(lines) - skip_lines - 1, -1, -1):
+            line = lines[i].strip()
+            if not line:
+                continue
+            return self.get_heading(line) + done_icon
+
+        return self.get_heading() + done_icon
+
+    def fix_full_output(self, output: str):
+        # remove any single byte \xXX escapes
+        output = re.sub(r"(?<!\\)\\x[0-9A-Fa-f]{2}", "", output)
+        # Strip every line of output before truncation
+        # output = "\n".join(line.strip() for line in output.splitlines())
+        output = truncate_text_agent(agent=self.agent, output=output, threshold=1000000) # ~1MB, larger outputs should be dumped to file, not read from terminal
+        return output
+
+    def get_cwd(self):
+        project_name = projects.get_context_project_name(self.agent.context)
+        if not project_name:
+            return None
+        project_path = projects.get_project_folder(project_name)
+        normalized = files.normalize_a0_path(project_path)
+        return normalized
+        
+
+        
+# /a0/python/tools/document_query.py
+import asyncio
+
+from python.helpers.tool import Tool, Response
+from python.helpers.document_query import DocumentQueryHelper
+
+
+class DocumentQueryTool(Tool):
+
+    async def execute(self, **kwargs):
+        document_uri = kwargs.get("document")
+        document_uris = []
+
+        if isinstance(document_uri, list):
+            document_uris = document_uri
+        elif isinstance(document_uri, str):
+            document_uris = [document_uri]
+
+        if not document_uris:
+            return Response(message="Error: no document provided", break_loop=False)
+
+        queries = (
+            kwargs["queries"]
+            if "queries" in kwargs
+            else [kwargs["query"]]
+            if ("query" in kwargs and kwargs["query"])
+            else []
+        )
+        try:
+
+            progress = []
+
+            # logging callback
+            def progress_callback(msg):
+                progress.append(msg)
+                self.log.update(progress="\n".join(progress))
+            
+            helper = DocumentQueryHelper(self.agent, progress_callback)
+            if not queries:
+                contents = await asyncio.gather(
+                    *[helper.document_get_content(uri) for uri in document_uris]
+                )
+                content = "\n\n---\n\n".join(contents)
+            else:
+                _, content = await helper.document_qa(document_uris, queries)
+            return Response(message=content, break_loop=False)
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            return Response(message=f"Error processing document: {e}", break_loop=False)
+
+# /a0/python/tools/input.py
+from agent import Agent, UserMessage
+from python.helpers.tool import Tool, Response
+from python.tools.code_execution_tool import CodeExecution
+
+
+class Input(Tool):
+
+    async def execute(self, keyboard="", **kwargs):
+        # normalize keyboard input
+        keyboard = keyboard.rstrip()
+        # keyboard += "\n" # no need to, code_exec does that
+        
+        # terminal session number
+        session = int(self.args.get("session", 0))
+
+        # forward keyboard input to code execution tool
+        args = {"runtime": "terminal", "code": keyboard, "session": session, "allow_running": True}
+        cet = CodeExecution(self.agent, "code_execution_tool", "", args, self.message, self.loop_data)
+        cet.log = self.log
+        return await cet.execute(**args)
+
+    def get_log_object(self):
+        return self.agent.context.log.log(type="code_exe", heading=f"icon://keyboard {self.agent.agent_name}: Using tool '{self.name}'", content="", kvps=self.args)
+
+    async def after_execution(self, response, **kwargs):
+        self.agent.hist_add_tool_result(self.name, response.message, **(response.additional or {}))
+# /a0/python/tools/memory_delete.py
+from python.helpers.memory import Memory
+from python.helpers.tool import Tool, Response
+
+
+class MemoryDelete(Tool):
+
+    async def execute(self, ids="", **kwargs):
+        db = await Memory.get(self.agent)
+        ids = [id.strip() for id in ids.split(",") if id.strip()]
+        dels = await db.delete_documents_by_ids(ids=ids)
+
+        result = self.agent.read_prompt("fw.memories_deleted.md", memory_count=len(dels))
+        return Response(message=result, break_loop=False)
+
+# /a0/python/tools/memory_forget.py
+from python.helpers.memory import Memory
+from python.helpers.tool import Tool, Response
+from python.tools.memory_load import DEFAULT_THRESHOLD
+
+
+class MemoryForget(Tool):
+
+    async def execute(self, query="", threshold=DEFAULT_THRESHOLD, filter="", **kwargs):
+        db = await Memory.get(self.agent)
+        dels = await db.delete_documents_by_query(query=query, threshold=threshold, filter=filter)
+
+        result = self.agent.read_prompt("fw.memories_deleted.md", memory_count=len(dels))
+        return Response(message=result, break_loop=False)
+
+# /a0/python/tools/memory_load.py
+from python.helpers.memory import Memory
+from python.helpers.tool import Tool, Response
+
+DEFAULT_THRESHOLD = 0.7
+DEFAULT_LIMIT = 10
+
+
+class MemoryLoad(Tool):
+
+    async def execute(self, query="", threshold=DEFAULT_THRESHOLD, limit=DEFAULT_LIMIT, filter="", **kwargs):
+        db = await Memory.get(self.agent)
+        docs = await db.search_similarity_threshold(query=query, limit=limit, threshold=threshold, filter=filter)
+
+        if len(docs) == 0:
+            result = self.agent.read_prompt("fw.memories_not_found.md", query=query)
+        else:
+            text = "\n\n".join(Memory.format_docs_plain(docs))
+            result = str(text)
+
+        return Response(message=result, break_loop=False)
+
+# /a0/python/tools/memory_save.py
+from python.helpers.memory import Memory
+from python.helpers.tool import Tool, Response
+
+
+class MemorySave(Tool):
+
+    async def execute(self, text="", area="", **kwargs):
+
+        if not area:
+            area = Memory.Area.MAIN.value
+
+        metadata = {"area": area, **kwargs}
+
+        db = await Memory.get(self.agent)
+        id = await db.insert_text(text, metadata)
+
+        result = self.agent.read_prompt("fw.memory_saved.md", memory_id=id)
+        return Response(message=result, break_loop=False)
+
+# /a0/python/tools/notify_user.py
+from python.helpers.tool import Tool, Response
+from agent import AgentContext
+from python.helpers.notification import NotificationPriority, NotificationType
+
+class NotifyUserTool(Tool):
+
+    async def execute(self, **kwargs):
+
+        message = self.args.get("message", "")
+        title = self.args.get("title", "")
+        detail = self.args.get("detail", "")
+        notification_type = self.args.get("type", NotificationType.INFO)
+        priority = self.args.get("priority", NotificationPriority.HIGH) # by default, agents should notify with high priority
+        timeout = int(self.args.get("timeout", 30)) # agent's notifications should have longer timeouts
+
+        try:
+            notification_type = NotificationType(notification_type)
+        except ValueError:
+            return Response(message=f"Invalid notification type: {notification_type}", break_loop=False)
+
+        try:
+            priority = NotificationPriority(priority)
+        except ValueError:
+            return Response(message=f"Invalid notification priority: {priority}", break_loop=False)
+
+        if not message:
+            return Response(message="Message is required", break_loop=False)
+
+        AgentContext.get_notification_manager().add_notification(
+            message=message,
+            title=title,
+            detail=detail,
+            type=notification_type,
+            priority=priority,
+            display_time=timeout,
+        )
+        return Response(message=self.agent.read_prompt("fw.notify_user.notification_sent.md"), break_loop=False)
+
+# /a0/python/tools/response.py
+from python.helpers.tool import Tool, Response
+
+
+class ResponseTool(Tool):
+
+    async def execute(self, **kwargs):
+        return Response(message=self.args["text"] if "text" in self.args else self.args["message"], break_loop=True)
+
+    async def before_execution(self, **kwargs):
+        # self.log = self.agent.context.log.log(type="response", heading=f"{self.agent.agent_name}: Responding", content=self.args.get("text", ""))
+        # don't log here anymore, we have the live_response extension now
+        pass
+
+    async def after_execution(self, response, **kwargs):
+        # do not add anything to the history or output
+
+        if self.loop_data and "log_item_response" in self.loop_data.params_temporary:
+            log = self.loop_data.params_temporary["log_item_response"]
+            log.update(finished=True) # mark the message as finished
+
+# /a0/python/tools/scheduler.py
+import asyncio
+from datetime import datetime
+import json
+import random
+import re
+from python.helpers.tool import Tool, Response
+from python.helpers.task_scheduler import (
+    TaskScheduler, ScheduledTask, AdHocTask, PlannedTask,
+    serialize_task, TaskState, TaskSchedule, TaskPlan, parse_datetime, serialize_datetime
+)
+from agent import AgentContext
+from python.helpers import persist_chat
+from python.helpers.projects import get_context_project_name, load_basic_project_data
+
+DEFAULT_WAIT_TIMEOUT = 300
+
+
+class SchedulerTool(Tool):
+
+    async def execute(self, **kwargs):
+        if self.method == "list_tasks":
+            return await self.list_tasks(**kwargs)
+        elif self.method == "find_task_by_name":
+            return await self.find_task_by_name(**kwargs)
+        elif self.method == "show_task":
+            return await self.show_task(**kwargs)
+        elif self.method == "run_task":
+            return await self.run_task(**kwargs)
+        elif self.method == "delete_task":
+            return await self.delete_task(**kwargs)
+        elif self.method == "create_scheduled_task":
+            return await self.create_scheduled_task(**kwargs)
+        elif self.method == "create_adhoc_task":
+            return await self.create_adhoc_task(**kwargs)
+        elif self.method == "create_planned_task":
+            return await self.create_planned_task(**kwargs)
+        elif self.method == "wait_for_task":
+            return await self.wait_for_task(**kwargs)
+        else:
+            return Response(message=f"Unknown method '{self.name}:{self.method}'", break_loop=False)
+
+    def _resolve_project_metadata(self) -> tuple[str | None, str | None]:
+        context = self.agent.context
+        if not context:
+            return (None, None)
+        project_slug = get_context_project_name(context)
+        if not project_slug:
+            return (None, None)
+        try:
+            metadata = load_basic_project_data(project_slug)
+            color = metadata.get("color") or None
+        except Exception:
+            color = None
+        return project_slug, color
+
+    async def list_tasks(self, **kwargs) -> Response:
+        state_filter: list[str] | None = kwargs.get("state", None)
+        type_filter: list[str] | None = kwargs.get("type", None)
+        next_run_within_filter: int | None = kwargs.get("next_run_within", None)
+        next_run_after_filter: int | None = kwargs.get("next_run_after", None)
+
+        tasks: list[ScheduledTask | AdHocTask | PlannedTask] = TaskScheduler.get().get_tasks()
+        filtered_tasks = []
+        for task in tasks:
+            if state_filter and task.state not in state_filter:
+                continue
+            if type_filter and task.type not in type_filter:
+                continue
+            if next_run_within_filter and task.get_next_run_minutes() is not None and task.get_next_run_minutes() > next_run_within_filter:  # type: ignore
+                continue
+            if next_run_after_filter and task.get_next_run_minutes() is not None and task.get_next_run_minutes() < next_run_after_filter:  # type: ignore
+                continue
+            filtered_tasks.append(serialize_task(task))
+
+        return Response(message=json.dumps(filtered_tasks, indent=4), break_loop=False)
+
+    async def find_task_by_name(self, **kwargs) -> Response:
+        name: str = kwargs.get("name", "")
+        if not name:
+            return Response(message="Task name is required", break_loop=False)
+        tasks: list[ScheduledTask | AdHocTask | PlannedTask] = TaskScheduler.get().find_task_by_name(name)
+        if not tasks:
+            return Response(message=f"Task not found: {name}", break_loop=False)
+        return Response(message=json.dumps([serialize_task(task) for task in tasks], indent=4), break_loop=False)
+
+    async def show_task(self, **kwargs) -> Response:
+        task_uuid: str = kwargs.get("uuid", "")
+        if not task_uuid:
+            return Response(message="Task UUID is required", break_loop=False)
+        task: ScheduledTask | AdHocTask | PlannedTask | None = TaskScheduler.get().get_task_by_uuid(task_uuid)
+        if not task:
+            return Response(message=f"Task not found: {task_uuid}", break_loop=False)
+        return Response(message=json.dumps(serialize_task(task), indent=4), break_loop=False)
+
+    async def run_task(self, **kwargs) -> Response:
+        task_uuid: str = kwargs.get("uuid", "")
+        if not task_uuid:
+            return Response(message="Task UUID is required", break_loop=False)
+        task_context: str | None = kwargs.get("context", None)
+        task: ScheduledTask | AdHocTask | PlannedTask | None = TaskScheduler.get().get_task_by_uuid(task_uuid)
+        if not task:
+            return Response(message=f"Task not found: {task_uuid}", break_loop=False)
+        await TaskScheduler.get().run_task_by_uuid(task_uuid, task_context)
+        if task.context_id == self.agent.context.id:
+            break_loop = True  # break loop if task is running in the same context, otherwise it would start two conversations in one window
+        else:
+            break_loop = False
+        return Response(message=f"Task started: {task_uuid}", break_loop=break_loop)
+
+    async def delete_task(self, **kwargs) -> Response:
+        task_uuid: str = kwargs.get("uuid", "")
+        if not task_uuid:
+            return Response(message="Task UUID is required", break_loop=False)
+
+        task: ScheduledTask | AdHocTask | PlannedTask | None = TaskScheduler.get().get_task_by_uuid(task_uuid)
+        if not task:
+            return Response(message=f"Task not found: {task_uuid}", break_loop=False)
+
+        context = None
+        if task.context_id:
+            context = AgentContext.get(task.context_id)
+
+        if task.state == TaskState.RUNNING:
+            if context:
+                context.reset()
+            await TaskScheduler.get().update_task(task_uuid, state=TaskState.IDLE)
+            await TaskScheduler.get().save()
+
+        if context and context.id == task.uuid:
+            AgentContext.remove(context.id)
+            persist_chat.remove_chat(context.id)
+
+        await TaskScheduler.get().remove_task_by_uuid(task_uuid)
+        if TaskScheduler.get().get_task_by_uuid(task_uuid) is None:
+            return Response(message=f"Task deleted: {task_uuid}", break_loop=False)
+        else:
+            return Response(message=f"Task failed to delete: {task_uuid}", break_loop=False)
+
+    async def create_scheduled_task(self, **kwargs) -> Response:
+        # "name": "XXX",
+        #   "system_prompt": "You are a software developer",
+        #   "prompt": "Send the user an email with a greeting using python and smtp. The user's address is: xxx@yyy.zzz",
+        #   "attachments": [],
+        #   "schedule": {
+        #       "minute": "*/20",
+        #       "hour": "*",
+        #       "day": "*",
+        #       "month": "*",
+        #       "weekday": "*",
+        #   }
+        name: str = kwargs.get("name", "")
+        system_prompt: str = kwargs.get("system_prompt", "")
+        prompt: str = kwargs.get("prompt", "")
+        attachments: list[str] = kwargs.get("attachments", [])
+        schedule: dict[str, str] = kwargs.get("schedule", {})
+        dedicated_context: bool = kwargs.get("dedicated_context", False)
+
+        task_schedule = TaskSchedule(
+            minute=schedule.get("minute", "*"),
+            hour=schedule.get("hour", "*"),
+            day=schedule.get("day", "*"),
+            month=schedule.get("month", "*"),
+            weekday=schedule.get("weekday", "*"),
+        )
+
+        # Validate cron expression, agent might hallucinate
+        cron_regex = "^((((\d+,)+\d+|(\d+(\/|-|#)\d+)|\d+L?|\*(\/\d+)?|L(-\d+)?|\?|[A-Z]{3}(-[A-Z]{3})?) ?){5,7})$"
+        if not re.match(cron_regex, task_schedule.to_crontab()):
+            return Response(message="Invalid cron expression: " + task_schedule.to_crontab(), break_loop=False)
+
+        project_slug, project_color = self._resolve_project_metadata()
+
+        task = ScheduledTask.create(
+            name=name,
+            system_prompt=system_prompt,
+            prompt=prompt,
+            attachments=attachments,
+            schedule=task_schedule,
+            context_id=None if dedicated_context else self.agent.context.id,
+            project_name=project_slug,
+            project_color=project_color,
+        )
+        await TaskScheduler.get().add_task(task)
+        return Response(message=f"Scheduled task '{name}' created: {task.uuid}", break_loop=False)
+
+    async def create_adhoc_task(self, **kwargs) -> Response:
+        name: str = kwargs.get("name", "")
+        system_prompt: str = kwargs.get("system_prompt", "")
+        prompt: str = kwargs.get("prompt", "")
+        attachments: list[str] = kwargs.get("attachments", [])
+        token: str = str(random.randint(1000000000000000000, 9999999999999999999))
+        dedicated_context: bool = kwargs.get("dedicated_context", False)
+
+        project_slug, project_color = self._resolve_project_metadata()
+
+        task = AdHocTask.create(
+            name=name,
+            system_prompt=system_prompt,
+            prompt=prompt,
+            attachments=attachments,
+            token=token,
+            context_id=None if dedicated_context else self.agent.context.id,
+            project_name=project_slug,
+            project_color=project_color,
+        )
+        await TaskScheduler.get().add_task(task)
+        return Response(message=f"Adhoc task '{name}' created: {task.uuid}", break_loop=False)
+
+    async def create_planned_task(self, **kwargs) -> Response:
+        name: str = kwargs.get("name", "")
+        system_prompt: str = kwargs.get("system_prompt", "")
+        prompt: str = kwargs.get("prompt", "")
+        attachments: list[str] = kwargs.get("attachments", [])
+        plan: list[str] = kwargs.get("plan", [])
+        dedicated_context: bool = kwargs.get("dedicated_context", False)
+
+        # Convert plan to list of datetimes in UTC
+        todo: list[datetime] = []
+        for item in plan:
+            dt = parse_datetime(item)
+            if dt is None:
+                return Response(message=f"Invalid datetime: {item}", break_loop=False)
+            todo.append(dt)
+
+        # Create task plan with todo list
+        task_plan = TaskPlan.create(
+            todo=todo,
+            in_progress=None,
+            done=[]
+        )
+
+        project_slug, project_color = self._resolve_project_metadata()
+
+        # Create planned task with task plan
+        task = PlannedTask.create(
+            name=name,
+            system_prompt=system_prompt,
+            prompt=prompt,
+            attachments=attachments,
+            plan=task_plan,
+            context_id=None if dedicated_context else self.agent.context.id,
+            project_name=project_slug,
+            project_color=project_color
+        )
+        await TaskScheduler.get().add_task(task)
+        return Response(message=f"Planned task '{name}' created: {task.uuid}", break_loop=False)
+
+    async def wait_for_task(self, **kwargs) -> Response:
+        task_uuid: str = kwargs.get("uuid", "")
+        if not task_uuid:
+            return Response(message="Task UUID is required", break_loop=False)
+
+        scheduler = TaskScheduler.get()
+        task: ScheduledTask | AdHocTask | PlannedTask | None = scheduler.get_task_by_uuid(task_uuid)
+        if not task:
+            return Response(message=f"Task not found: {task_uuid}", break_loop=False)
+
+        if task.context_id == self.agent.context.id:
+            return Response(message="You can only wait for tasks running in their own dedicated context.", break_loop=False)
+
+        done = False
+        elapsed = 0
+        while not done:
+            await scheduler.reload()
+            task = scheduler.get_task_by_uuid(task_uuid)
+            if not task:
+                return Response(message=f"Task not found: {task_uuid}", break_loop=False)
+
+            if task.state == TaskState.RUNNING:
+                await asyncio.sleep(1)
+                elapsed += 1
+                if elapsed > DEFAULT_WAIT_TIMEOUT:
+                    return Response(message=f"Task wait timeout ({DEFAULT_WAIT_TIMEOUT} seconds): {task_uuid}", break_loop=False)
+            else:
+                done = True
+
+        return Response(
+            message=f"*Task*: {task_uuid}\n*State*: {task.state}\n*Last run*: {serialize_datetime(task.last_run)}\n*Result*:\n{task.last_result}",
+            break_loop=False
+        )
+
+# /a0/python/tools/search_engine.py
+import os
+import asyncio
+from python.helpers import dotenv, memory, perplexity_search, duckduckgo_search
+from python.helpers.tool import Tool, Response
+from python.helpers.print_style import PrintStyle
+from python.helpers.errors import handle_error
+from python.helpers.searxng import search as searxng
+
+SEARCH_ENGINE_RESULTS = 10
+
+
+class SearchEngine(Tool):
+    async def execute(self, query="", **kwargs):
+
+
+        searxng_result = await self.searxng_search(query)
+
+        await self.agent.handle_intervention(
+            searxng_result
+        )  # wait for intervention and handle it, if paused
+
+        return Response(message=searxng_result, break_loop=False)
+
+
+    async def searxng_search(self, question):
+        results = await searxng(question)
+        return self.format_result_searxng(results, "Search Engine")
+
+    def format_result_searxng(self, result, source):
+        if isinstance(result, Exception):
+            handle_error(result)
+            return f"{source} search failed: {str(result)}"
+
+        outputs = []
+        for item in result["results"]:
+            outputs.append(f"{item['title']}\n{item['url']}\n{item['content']}")
+
+        return "\n\n".join(outputs[:SEARCH_ENGINE_RESULTS]).strip()
+
+# /a0/python/tools/unknown.py
+from python.helpers.tool import Tool, Response
+from python.extensions.system_prompt._10_system_prompt import (
+    get_tools_prompt,
+)
+
+
+class Unknown(Tool):
+    async def execute(self, **kwargs):
+        tools = get_tools_prompt(self.agent)
+        return Response(
+            message=self.agent.read_prompt(
+                "fw.tool_not_found.md", tool_name=self.name, tools_prompt=tools
+            ),
+            break_loop=False,
+        )
+
+# /a0/python/tools/vision_load.py
+import base64
+from python.helpers.print_style import PrintStyle
+from python.helpers.tool import Tool, Response
+from python.helpers import runtime, files, images
+from mimetypes import guess_type
+from python.helpers import history
+
+# image optimization and token estimation for context window
+MAX_PIXELS = 768_000
+QUALITY = 75
+TOKENS_ESTIMATE = 1500
+
+
+class VisionLoad(Tool):
+    async def execute(self, paths: list[str] = [], **kwargs) -> Response:
+
+        self.images_dict = {}
+        template: list[dict[str, str]] = []  # type: ignore
+
+        for path in paths:
+            if not await runtime.call_development_function(files.exists, str(path)):
+                continue
+
+            if path not in self.images_dict:
+                mime_type, _ = guess_type(str(path))
+                if mime_type and mime_type.startswith("image/"):
+                    try:
+                        # Read binary file
+                        file_content = await runtime.call_development_function(
+                            files.read_file_base64, str(path)
+                        )
+                        file_content = base64.b64decode(file_content)
+                        # Compress and convert to JPEG
+                        compressed = images.compress_image(
+                            file_content, max_pixels=MAX_PIXELS, quality=QUALITY
+                        )
+                        # Encode as base64
+                        file_content_b64 = base64.b64encode(compressed).decode("utf-8")
+
+                        # DEBUG: Save compressed image
+                        # await runtime.call_development_function(
+                        #     files.write_file_base64, str(path), file_content_b64
+                        # )
+
+                        # Construct the data URL (always JPEG after compression)
+                        self.images_dict[path] = file_content_b64
+                    except Exception as e:
+                        self.images_dict[path] = None
+                        PrintStyle().error(f"Error processing image {path}: {e}")
+                        self.agent.context.log.log("warning", f"Error processing image {path}: {e}")
+
+        return Response(message="dummy", break_loop=False)
+
+    async def after_execution(self, response: Response, **kwargs):
+
+        # build image data messages for LLMs, or error message
+        content = []
+        if self.images_dict:
+            for path, image in self.images_dict.items():
+                if image:
+                    content.append(
+                        {
+                            "type": "image_url",
+                            "image_url": {"url": f"data:image/jpeg;base64,{image}"},
+                        }
+                    )
+                else:
+                    content.append(
+                        {
+                            "type": "text",
+                            "text": "Error processing image " + path,
+                        }
+                    )
+            # append as raw message content for LLMs with vision tokens estimate
+            msg = history.RawMessage(raw_content=content, preview="<Base64 encoded image data>")
+            self.agent.hist_add_message(
+                False, content=msg, tokens=TOKENS_ESTIMATE * len(content)
+            )
+        else:
+            self.agent.hist_add_tool_result(self.name, "No images processed")
+
+        # print and log short version
+        message = (
+            "No images processed"
+            if not self.images_dict
+            else f"{len(self.images_dict)} images processed"
+        )
+        PrintStyle(
+            font_color="#1B4F72", background_color="white", padding=True, bold=True
+        ).print(f"{self.agent.agent_name}: Response from tool '{self.name}'")
+        PrintStyle(font_color="#85C1E9").print(message)
+        self.log.update(result=message)
+
+# /a0/python/tools/wait.py
+import asyncio
+from datetime import datetime, timedelta, timezone
+from python.helpers.tool import Tool, Response
+from python.helpers.print_style import PrintStyle
+from python.helpers.wait import managed_wait
+from python.helpers.localization import Localization
+
+class WaitTool(Tool):
+
+    async def execute(self, **kwargs) -> Response:
+        await self.agent.handle_intervention()
+
+        seconds = self.args.get("seconds", 0)
+        minutes = self.args.get("minutes", 0)
+        hours = self.args.get("hours", 0)
+        days = self.args.get("days", 0)
+        until_timestamp_str = self.args.get("until")
+
+        is_duration_wait = not bool(until_timestamp_str)
+
+        now = datetime.now(timezone.utc)
+        target_time = None
+
+        if until_timestamp_str:
+            try:
+                target_time = Localization.get().localtime_str_to_utc_dt(until_timestamp_str)
+                if not target_time:
+                    raise ValueError(f"Invalid timestamp format: {until_timestamp_str}")
+            except ValueError as e:
+                return Response(
+                    message=str(e),
+                    break_loop=False,
+                )
+        else:
+            wait_duration = timedelta(
+                days=int(days),
+                hours=int(hours),
+                minutes=int(minutes),
+                seconds=int(seconds),
+            )
+            if wait_duration.total_seconds() <= 0:
+                return Response(
+                    message="Wait duration must be positive.",
+                    break_loop=False,
+                )
+            target_time = now + wait_duration
+        
+        if target_time <= now:
+            return Response(
+                message=f"Target time {target_time.isoformat()} is in the past.",
+                break_loop=False,
+            )
+
+        PrintStyle.info(f"Waiting until {target_time.isoformat()}...")
+
+        target_time = await managed_wait(
+            agent=self.agent,
+            target_time=target_time,
+            is_duration_wait=is_duration_wait,
+            log=self.log,
+            get_heading_callback=self.get_heading
+        )
+
+        if self.log:
+            self.log.update(heading=self.get_heading("Done", done=True))
+
+        message = self.agent.read_prompt(
+            "fw.wait_complete.md",
+            target_time=target_time.isoformat()
+        )
+
+        return Response(
+            message=message,
+            break_loop=False,
+        )
+
+    def get_log_object(self):
+        return self.agent.context.log.log(
+            type="progress",
+            heading=self.get_heading(),
+            content="",
+            kvps=self.args,
+        )
+
+    def get_heading(self, text: str = "", done: bool = False):
+        done_icon = " icon://done_all" if done else ""
+        if not text:
+            text = f"Waiting..."
+        return f"icon://timer Wait: {text}{done_icon}"
+
