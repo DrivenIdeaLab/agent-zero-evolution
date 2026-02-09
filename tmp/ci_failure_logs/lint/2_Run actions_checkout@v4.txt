@@ -1,72 +1,72 @@
-﻿2026-02-09T04:37:28.7806393Z ##[group]Run actions/checkout@v4
-2026-02-09T04:37:28.7807240Z with:
-2026-02-09T04:37:28.7807941Z   repository: DrivenIdeaLab/agent-zero-evolution
-2026-02-09T04:37:28.7808661Z   token: ***
-2026-02-09T04:37:28.7809037Z   ssh-strict: true
-2026-02-09T04:37:28.7809411Z   ssh-user: git
-2026-02-09T04:37:28.7809790Z   persist-credentials: true
-2026-02-09T04:37:28.7810231Z   clean: true
-2026-02-09T04:37:28.7810608Z   sparse-checkout-cone-mode: true
-2026-02-09T04:37:28.7811069Z   fetch-depth: 1
-2026-02-09T04:37:28.7811440Z   fetch-tags: false
-2026-02-09T04:37:28.7811828Z   show-progress: true
-2026-02-09T04:37:28.7812212Z   lfs: false
-2026-02-09T04:37:28.7812570Z   submodules: false
-2026-02-09T04:37:28.7812958Z   set-safe-directory: true
-2026-02-09T04:37:28.7813640Z ##[endgroup]
-2026-02-09T04:37:28.8906562Z Syncing repository: DrivenIdeaLab/agent-zero-evolution
-2026-02-09T04:37:28.8909468Z ##[group]Getting Git version info
-2026-02-09T04:37:28.8910829Z Working directory is '/home/runner/work/agent-zero-evolution/agent-zero-evolution'
-2026-02-09T04:37:28.8912763Z [command]/usr/bin/git version
-2026-02-09T04:37:28.8982506Z git version 2.52.0
-2026-02-09T04:37:28.9009312Z ##[endgroup]
-2026-02-09T04:37:28.9033723Z Temporarily overriding HOME='/home/runner/work/_temp/5ff145d6-9530-42fc-b2d1-2784429de558' before making global git config changes
-2026-02-09T04:37:28.9036056Z Adding repository directory to the temporary git global config as a safe directory
-2026-02-09T04:37:28.9040174Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/agent-zero-evolution/agent-zero-evolution
-2026-02-09T04:37:28.9085316Z Deleting the contents of '/home/runner/work/agent-zero-evolution/agent-zero-evolution'
-2026-02-09T04:37:28.9088810Z ##[group]Initializing the repository
-2026-02-09T04:37:28.9092934Z [command]/usr/bin/git init /home/runner/work/agent-zero-evolution/agent-zero-evolution
-2026-02-09T04:37:28.9205970Z hint: Using 'master' as the name for the initial branch. This default branch name
-2026-02-09T04:37:28.9207188Z hint: will change to "main" in Git 3.0. To configure the initial branch name
-2026-02-09T04:37:28.9208618Z hint: to use in all of your new repositories, which will suppress this warning,
-2026-02-09T04:37:28.9209295Z hint: call:
-2026-02-09T04:37:28.9209667Z hint:
-2026-02-09T04:37:28.9210203Z hint: 	git config --global init.defaultBranch <name>
-2026-02-09T04:37:28.9211184Z hint:
-2026-02-09T04:37:28.9211875Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
-2026-02-09T04:37:28.9212739Z hint: 'development'. The just-created branch can be renamed via this command:
-2026-02-09T04:37:28.9213416Z hint:
-2026-02-09T04:37:28.9213781Z hint: 	git branch -m <name>
-2026-02-09T04:37:28.9214212Z hint:
-2026-02-09T04:37:28.9214801Z hint: Disable this message with "git config set advice.defaultBranchName false"
-2026-02-09T04:37:28.9216027Z Initialized empty Git repository in /home/runner/work/agent-zero-evolution/agent-zero-evolution/.git/
-2026-02-09T04:37:28.9222054Z [command]/usr/bin/git remote add origin https://github.com/DrivenIdeaLab/agent-zero-evolution
-2026-02-09T04:37:28.9254463Z ##[endgroup]
-2026-02-09T04:37:28.9255179Z ##[group]Disabling automatic garbage collection
-2026-02-09T04:37:28.9258873Z [command]/usr/bin/git config --local gc.auto 0
-2026-02-09T04:37:28.9285221Z ##[endgroup]
-2026-02-09T04:37:28.9285894Z ##[group]Setting up auth
-2026-02-09T04:37:28.9292451Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
-2026-02-09T04:37:28.9321223Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
-2026-02-09T04:37:28.9680905Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
-2026-02-09T04:37:28.9711066Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
-2026-02-09T04:37:28.9942025Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
-2026-02-09T04:37:28.9976112Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
-2026-02-09T04:37:29.0201910Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
-2026-02-09T04:37:29.0234991Z ##[endgroup]
-2026-02-09T04:37:29.0236243Z ##[group]Fetching the repository
-2026-02-09T04:37:29.0244700Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +19f2926a46ee58443afa1f739e3be5207777f00d:refs/remotes/origin/main
-2026-02-09T04:37:29.2752370Z From https://github.com/DrivenIdeaLab/agent-zero-evolution
-2026-02-09T04:37:29.2753619Z  * [new ref]         19f2926a46ee58443afa1f739e3be5207777f00d -> origin/main
-2026-02-09T04:37:29.2787463Z ##[endgroup]
-2026-02-09T04:37:29.2788959Z ##[group]Determining the checkout info
-2026-02-09T04:37:29.2790510Z ##[endgroup]
-2026-02-09T04:37:29.2794682Z [command]/usr/bin/git sparse-checkout disable
-2026-02-09T04:37:29.2836567Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
-2026-02-09T04:37:29.2864700Z ##[group]Checking out the ref
-2026-02-09T04:37:29.2866787Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
-2026-02-09T04:37:29.2960909Z Switched to a new branch 'main'
-2026-02-09T04:37:29.2964220Z branch 'main' set up to track 'origin/main'.
-2026-02-09T04:37:29.2971602Z ##[endgroup]
-2026-02-09T04:37:29.3006095Z [command]/usr/bin/git log -1 --format=%H
-2026-02-09T04:37:29.3027508Z 19f2926a46ee58443afa1f739e3be5207777f00d
+﻿2026-02-09T04:44:58.9512381Z ##[group]Run actions/checkout@v4
+2026-02-09T04:44:58.9513293Z with:
+2026-02-09T04:44:58.9513822Z   repository: DrivenIdeaLab/agent-zero-evolution
+2026-02-09T04:44:58.9514600Z   token: ***
+2026-02-09T04:44:58.9515006Z   ssh-strict: true
+2026-02-09T04:44:58.9515680Z   ssh-user: git
+2026-02-09T04:44:58.9516123Z   persist-credentials: true
+2026-02-09T04:44:58.9516608Z   clean: true
+2026-02-09T04:44:58.9517026Z   sparse-checkout-cone-mode: true
+2026-02-09T04:44:58.9517539Z   fetch-depth: 1
+2026-02-09T04:44:58.9517959Z   fetch-tags: false
+2026-02-09T04:44:58.9518414Z   show-progress: true
+2026-02-09T04:44:58.9518861Z   lfs: false
+2026-02-09T04:44:58.9519253Z   submodules: false
+2026-02-09T04:44:58.9519679Z   set-safe-directory: true
+2026-02-09T04:44:58.9520428Z ##[endgroup]
+2026-02-09T04:44:59.0584183Z Syncing repository: DrivenIdeaLab/agent-zero-evolution
+2026-02-09T04:44:59.0586427Z ##[group]Getting Git version info
+2026-02-09T04:44:59.0587352Z Working directory is '/home/runner/work/agent-zero-evolution/agent-zero-evolution'
+2026-02-09T04:44:59.0588598Z [command]/usr/bin/git version
+2026-02-09T04:44:59.0655087Z git version 2.52.0
+2026-02-09T04:44:59.0681063Z ##[endgroup]
+2026-02-09T04:44:59.0702027Z Temporarily overriding HOME='/home/runner/work/_temp/ab09e640-d82d-40e5-846c-dcd85e3bacb7' before making global git config changes
+2026-02-09T04:44:59.0703563Z Adding repository directory to the temporary git global config as a safe directory
+2026-02-09T04:44:59.0707445Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/agent-zero-evolution/agent-zero-evolution
+2026-02-09T04:44:59.0743288Z Deleting the contents of '/home/runner/work/agent-zero-evolution/agent-zero-evolution'
+2026-02-09T04:44:59.0746859Z ##[group]Initializing the repository
+2026-02-09T04:44:59.0750856Z [command]/usr/bin/git init /home/runner/work/agent-zero-evolution/agent-zero-evolution
+2026-02-09T04:44:59.0842982Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-02-09T04:44:59.0844298Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-02-09T04:44:59.0845872Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-02-09T04:44:59.0846669Z hint: call:
+2026-02-09T04:44:59.0847192Z hint:
+2026-02-09T04:44:59.0848357Z hint: 	git config --global init.defaultBranch <name>
+2026-02-09T04:44:59.0849447Z hint:
+2026-02-09T04:44:59.0850557Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-02-09T04:44:59.0852453Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-02-09T04:44:59.0853953Z hint:
+2026-02-09T04:44:59.0854788Z hint: 	git branch -m <name>
+2026-02-09T04:44:59.0855991Z hint:
+2026-02-09T04:44:59.0857144Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-02-09T04:44:59.0859348Z Initialized empty Git repository in /home/runner/work/agent-zero-evolution/agent-zero-evolution/.git/
+2026-02-09T04:44:59.0863068Z [command]/usr/bin/git remote add origin https://github.com/DrivenIdeaLab/agent-zero-evolution
+2026-02-09T04:44:59.0896731Z ##[endgroup]
+2026-02-09T04:44:59.0898119Z ##[group]Disabling automatic garbage collection
+2026-02-09T04:44:59.0901375Z [command]/usr/bin/git config --local gc.auto 0
+2026-02-09T04:44:59.0931513Z ##[endgroup]
+2026-02-09T04:44:59.0932997Z ##[group]Setting up auth
+2026-02-09T04:44:59.0939473Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-02-09T04:44:59.0972671Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-02-09T04:44:59.1297247Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-02-09T04:44:59.1328043Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-02-09T04:44:59.1546806Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-02-09T04:44:59.1579348Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-02-09T04:44:59.1826690Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-02-09T04:44:59.1862727Z ##[endgroup]
+2026-02-09T04:44:59.1864204Z ##[group]Fetching the repository
+2026-02-09T04:44:59.1872643Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +9122957daf4089051a3cb125f3d1c6d803a6f818:refs/remotes/origin/main
+2026-02-09T04:44:59.6762852Z From https://github.com/DrivenIdeaLab/agent-zero-evolution
+2026-02-09T04:44:59.6766045Z  * [new ref]         9122957daf4089051a3cb125f3d1c6d803a6f818 -> origin/main
+2026-02-09T04:44:59.6794962Z ##[endgroup]
+2026-02-09T04:44:59.6797060Z ##[group]Determining the checkout info
+2026-02-09T04:44:59.6798969Z ##[endgroup]
+2026-02-09T04:44:59.6801621Z [command]/usr/bin/git sparse-checkout disable
+2026-02-09T04:44:59.6841008Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-02-09T04:44:59.6866541Z ##[group]Checking out the ref
+2026-02-09T04:44:59.6869644Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2026-02-09T04:44:59.6972691Z Switched to a new branch 'main'
+2026-02-09T04:44:59.6976196Z branch 'main' set up to track 'origin/main'.
+2026-02-09T04:44:59.6982890Z ##[endgroup]
+2026-02-09T04:44:59.7015218Z [command]/usr/bin/git log -1 --format=%H
+2026-02-09T04:44:59.7037353Z 9122957daf4089051a3cb125f3d1c6d803a6f818

@@ -6,7 +6,6 @@ Checks the Agent Zero meta-project structure for completeness:
 - Verifies all registry files are non-empty
 - Checks that the changelog has recent entries
 - Returns a structured health report dict
-
 Example usage:
     from skills.custom.system_health_check import system_health_check
     report = system_health_check()
@@ -15,7 +14,6 @@ Example usage:
 import os
 from datetime import datetime
 
-import os
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 EXPECTED_DIRS = [
     'knowledge',

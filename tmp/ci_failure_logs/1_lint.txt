@@ -1,221 +1,218 @@
-﻿2026-02-09T04:37:27.8523391Z Current runner version: '2.331.0'
-2026-02-09T04:37:27.8553825Z ##[group]Runner Image Provisioner
-2026-02-09T04:37:27.8554685Z Hosted Compute Agent
-2026-02-09T04:37:27.8555200Z Version: 20260123.484
-2026-02-09T04:37:27.8555803Z Commit: 6bd6555ca37d84114959e1c76d2c01448ff61c5d
-2026-02-09T04:37:27.8556549Z Build Date: 2026-01-23T19:41:17Z
-2026-02-09T04:37:27.8557161Z Worker ID: {eff94785-2285-4b8f-a8b0-8c3b487e9ec1}
-2026-02-09T04:37:27.8558091Z Azure Region: northcentralus
-2026-02-09T04:37:27.8558698Z ##[endgroup]
-2026-02-09T04:37:27.8560111Z ##[group]Operating System
-2026-02-09T04:37:27.8560665Z Ubuntu
-2026-02-09T04:37:27.8561186Z 24.04.3
-2026-02-09T04:37:27.8561621Z LTS
-2026-02-09T04:37:27.8562098Z ##[endgroup]
-2026-02-09T04:37:27.8562548Z ##[group]Runner Image
-2026-02-09T04:37:27.8563146Z Image: ubuntu-24.04
-2026-02-09T04:37:27.8563643Z Version: 20260201.15.1
-2026-02-09T04:37:27.8564810Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260201.15/images/ubuntu/Ubuntu2404-Readme.md
-2026-02-09T04:37:27.8566258Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260201.15
-2026-02-09T04:37:27.8567165Z ##[endgroup]
-2026-02-09T04:37:27.8568543Z ##[group]GITHUB_TOKEN Permissions
-2026-02-09T04:37:27.8570520Z Contents: read
-2026-02-09T04:37:27.8571106Z Metadata: read
-2026-02-09T04:37:27.8571600Z Packages: read
-2026-02-09T04:37:27.8572084Z ##[endgroup]
-2026-02-09T04:37:27.8574078Z Secret source: Actions
-2026-02-09T04:37:27.8574981Z Prepare workflow directory
-2026-02-09T04:37:27.8986204Z Prepare all required actions
-2026-02-09T04:37:27.9040348Z Getting action download info
-2026-02-09T04:37:28.2199499Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
-2026-02-09T04:37:28.3404120Z Download action repository 'actions/setup-python@v5' (SHA:a26af69be951a213d495a4c3e4e4022e16d87065)
-2026-02-09T04:37:28.7135372Z Complete job name: lint
-2026-02-09T04:37:28.7806417Z ##[group]Run actions/checkout@v4
-2026-02-09T04:37:28.7807249Z with:
-2026-02-09T04:37:28.7807948Z   repository: DrivenIdeaLab/agent-zero-evolution
-2026-02-09T04:37:28.7808665Z   token: ***
-2026-02-09T04:37:28.7809040Z   ssh-strict: true
-2026-02-09T04:37:28.7809414Z   ssh-user: git
-2026-02-09T04:37:28.7809793Z   persist-credentials: true
-2026-02-09T04:37:28.7810234Z   clean: true
-2026-02-09T04:37:28.7810611Z   sparse-checkout-cone-mode: true
-2026-02-09T04:37:28.7811072Z   fetch-depth: 1
-2026-02-09T04:37:28.7811443Z   fetch-tags: false
-2026-02-09T04:37:28.7811832Z   show-progress: true
-2026-02-09T04:37:28.7812215Z   lfs: false
-2026-02-09T04:37:28.7812573Z   submodules: false
-2026-02-09T04:37:28.7812961Z   set-safe-directory: true
-2026-02-09T04:37:28.7813649Z ##[endgroup]
-2026-02-09T04:37:28.8906633Z Syncing repository: DrivenIdeaLab/agent-zero-evolution
-2026-02-09T04:37:28.8909494Z ##[group]Getting Git version info
-2026-02-09T04:37:28.8910923Z Working directory is '/home/runner/work/agent-zero-evolution/agent-zero-evolution'
-2026-02-09T04:37:28.8912776Z [command]/usr/bin/git version
-2026-02-09T04:37:28.8982533Z git version 2.52.0
-2026-02-09T04:37:28.9009335Z ##[endgroup]
-2026-02-09T04:37:28.9033753Z Temporarily overriding HOME='/home/runner/work/_temp/5ff145d6-9530-42fc-b2d1-2784429de558' before making global git config changes
-2026-02-09T04:37:28.9036079Z Adding repository directory to the temporary git global config as a safe directory
-2026-02-09T04:37:28.9040201Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/agent-zero-evolution/agent-zero-evolution
-2026-02-09T04:37:28.9085361Z Deleting the contents of '/home/runner/work/agent-zero-evolution/agent-zero-evolution'
-2026-02-09T04:37:28.9088834Z ##[group]Initializing the repository
-2026-02-09T04:37:28.9092960Z [command]/usr/bin/git init /home/runner/work/agent-zero-evolution/agent-zero-evolution
-2026-02-09T04:37:28.9205996Z hint: Using 'master' as the name for the initial branch. This default branch name
-2026-02-09T04:37:28.9207224Z hint: will change to "main" in Git 3.0. To configure the initial branch name
-2026-02-09T04:37:28.9208624Z hint: to use in all of your new repositories, which will suppress this warning,
-2026-02-09T04:37:28.9209298Z hint: call:
-2026-02-09T04:37:28.9209670Z hint:
-2026-02-09T04:37:28.9210211Z hint: 	git config --global init.defaultBranch <name>
-2026-02-09T04:37:28.9211193Z hint:
-2026-02-09T04:37:28.9211880Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
-2026-02-09T04:37:28.9212742Z hint: 'development'. The just-created branch can be renamed via this command:
-2026-02-09T04:37:28.9213419Z hint:
-2026-02-09T04:37:28.9213785Z hint: 	git branch -m <name>
-2026-02-09T04:37:28.9214216Z hint:
-2026-02-09T04:37:28.9214804Z hint: Disable this message with "git config set advice.defaultBranchName false"
-2026-02-09T04:37:28.9216037Z Initialized empty Git repository in /home/runner/work/agent-zero-evolution/agent-zero-evolution/.git/
-2026-02-09T04:37:28.9222090Z [command]/usr/bin/git remote add origin https://github.com/DrivenIdeaLab/agent-zero-evolution
-2026-02-09T04:37:28.9254481Z ##[endgroup]
-2026-02-09T04:37:28.9255184Z ##[group]Disabling automatic garbage collection
-2026-02-09T04:37:28.9258890Z [command]/usr/bin/git config --local gc.auto 0
-2026-02-09T04:37:28.9285240Z ##[endgroup]
-2026-02-09T04:37:28.9285898Z ##[group]Setting up auth
-2026-02-09T04:37:28.9292467Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
-2026-02-09T04:37:28.9321246Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
-2026-02-09T04:37:28.9680941Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
-2026-02-09T04:37:28.9711463Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
-2026-02-09T04:37:28.9942090Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
-2026-02-09T04:37:28.9976145Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
-2026-02-09T04:37:29.0201942Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
-2026-02-09T04:37:29.0235016Z ##[endgroup]
-2026-02-09T04:37:29.0236259Z ##[group]Fetching the repository
-2026-02-09T04:37:29.0244733Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +19f2926a46ee58443afa1f739e3be5207777f00d:refs/remotes/origin/main
-2026-02-09T04:37:29.2752448Z From https://github.com/DrivenIdeaLab/agent-zero-evolution
-2026-02-09T04:37:29.2753627Z  * [new ref]         19f2926a46ee58443afa1f739e3be5207777f00d -> origin/main
-2026-02-09T04:37:29.2787491Z ##[endgroup]
-2026-02-09T04:37:29.2789023Z ##[group]Determining the checkout info
-2026-02-09T04:37:29.2790528Z ##[endgroup]
-2026-02-09T04:37:29.2794711Z [command]/usr/bin/git sparse-checkout disable
-2026-02-09T04:37:29.2836603Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
-2026-02-09T04:37:29.2864733Z ##[group]Checking out the ref
-2026-02-09T04:37:29.2866804Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
-2026-02-09T04:37:29.2960946Z Switched to a new branch 'main'
-2026-02-09T04:37:29.2964249Z branch 'main' set up to track 'origin/main'.
-2026-02-09T04:37:29.2971629Z ##[endgroup]
-2026-02-09T04:37:29.3006130Z [command]/usr/bin/git log -1 --format=%H
-2026-02-09T04:37:29.3027547Z 19f2926a46ee58443afa1f739e3be5207777f00d
-2026-02-09T04:37:29.3317448Z ##[group]Run actions/setup-python@v5
-2026-02-09T04:37:29.3318499Z with:
-2026-02-09T04:37:29.3319032Z   python-version: 3.13
-2026-02-09T04:37:29.3319700Z   check-latest: false
-2026-02-09T04:37:29.3320593Z   token: ***
-2026-02-09T04:37:29.3321169Z   update-environment: true
-2026-02-09T04:37:29.3321909Z   allow-prereleases: false
-2026-02-09T04:37:29.3322869Z   freethreaded: false
-2026-02-09T04:37:29.3323498Z ##[endgroup]
-2026-02-09T04:37:29.5012630Z ##[group]Installed versions
-2026-02-09T04:37:29.5884984Z Successfully set up CPython (3.13.11)
-2026-02-09T04:37:29.5886628Z ##[endgroup]
-2026-02-09T04:37:29.6015773Z ##[group]Run pip install ruff
-2026-02-09T04:37:29.6016785Z [36;1mpip install ruff[0m
-2026-02-09T04:37:29.6483500Z shell: /usr/bin/bash -e {0}
-2026-02-09T04:37:29.6484412Z env:
-2026-02-09T04:37:29.6485349Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.11/x64
-2026-02-09T04:37:29.6486514Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.11/x64/lib/pkgconfig
-2026-02-09T04:37:29.6487814Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
-2026-02-09T04:37:29.6488914Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
-2026-02-09T04:37:29.6490019Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
-2026-02-09T04:37:29.6491114Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.11/x64/lib
-2026-02-09T04:37:29.6492101Z ##[endgroup]
-2026-02-09T04:37:40.5981842Z Collecting ruff
-2026-02-09T04:37:40.6560054Z   Downloading ruff-0.15.0-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (26 kB)
-2026-02-09T04:37:40.6729836Z Downloading ruff-0.15.0-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (11.1 MB)
-2026-02-09T04:37:40.7504103Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 11.1/11.1 MB 187.4 MB/s  0:00:00
-2026-02-09T04:37:40.8053910Z Installing collected packages: ruff
-2026-02-09T04:37:40.9323553Z Successfully installed ruff-0.15.0
-2026-02-09T04:37:41.0538912Z 
-2026-02-09T04:37:41.0539731Z [notice] A new release of pip is available: 26.0 -> 26.0.1
-2026-02-09T04:37:41.0540927Z [notice] To update, run: pip install --upgrade pip
-2026-02-09T04:37:41.1226542Z ##[group]Run ruff check skills/ hooks/ tests/ --ignore E501
-2026-02-09T04:37:41.1227024Z [36;1mruff check skills/ hooks/ tests/ --ignore E501[0m
-2026-02-09T04:37:41.1260594Z shell: /usr/bin/bash -e {0}
-2026-02-09T04:37:41.1260828Z env:
-2026-02-09T04:37:41.1261081Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.11/x64
-2026-02-09T04:37:41.1261514Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.11/x64/lib/pkgconfig
-2026-02-09T04:37:41.1261950Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
-2026-02-09T04:37:41.1262325Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
-2026-02-09T04:37:41.1262680Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
-2026-02-09T04:37:41.1263058Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.11/x64/lib
-2026-02-09T04:37:41.1263364Z ##[endgroup]
-2026-02-09T04:37:41.1403350Z F401 [*] `datetime.timedelta` imported but unused
-2026-02-09T04:37:41.1404046Z   --> skills/custom/system_health_check.py:16:32
-2026-02-09T04:37:41.1404628Z    |
-2026-02-09T04:37:41.1404901Z 14 | """
-2026-02-09T04:37:41.1405185Z 15 | import os
-2026-02-09T04:37:41.1405557Z 16 | from datetime import datetime, timedelta
-2026-02-09T04:37:41.1406042Z    |                                ^^^^^^^^^
-2026-02-09T04:37:41.1406460Z 17 |
-2026-02-09T04:37:41.1406802Z 18 | PROJECT_ROOT = '/a0/usr/projects/agent_zero'
-2026-02-09T04:37:41.1407277Z    |
-2026-02-09T04:37:41.1407627Z help: Remove unused import: `datetime.timedelta`
-2026-02-09T04:37:41.1408244Z 
-2026-02-09T04:37:41.1408420Z F401 [*] `typing.Any` imported but unused
-2026-02-09T04:37:41.1408895Z  --> skills/custom/task_continuation.py:2:32
-2026-02-09T04:37:41.1409332Z   |
-2026-02-09T04:37:41.1409586Z 1 | import re
-2026-02-09T04:37:41.1409910Z 2 | from typing import List, Dict, Any
-2026-02-09T04:37:41.1410321Z   |                                ^^^
-2026-02-09T04:37:41.1410681Z 3 |
-2026-02-09T04:37:41.1411061Z 4 | def detect_incomplete(response: str) -> bool:
-2026-02-09T04:37:41.1411554Z   |
-2026-02-09T04:37:41.1411870Z help: Remove unused import: `typing.Any`
-2026-02-09T04:37:41.1412178Z 
-2026-02-09T04:37:41.1412328Z E741 Ambiguous variable name: `l`
-2026-02-09T04:37:41.1412795Z   --> tests/validation/validate_registries.py:23:32
-2026-02-09T04:37:41.1413231Z    |
-2026-02-09T04:37:41.1413873Z 21 | def validate_table(path):
-2026-02-09T04:37:41.1414249Z 22 |     with open(path) as f:
-2026-02-09T04:37:41.1414648Z 23 |         lines = [l.strip() for l in f if l.strip()]
-2026-02-09T04:37:41.1414941Z    |                                ^
-2026-02-09T04:37:41.1415190Z 24 |     # Find table header and separator
-2026-02-09T04:37:41.1415579Z 25 |     header_idx = next((i for i, l in enumerate(lines) if l.startswith('|')), None)
-2026-02-09T04:37:41.1415936Z    |
-2026-02-09T04:37:41.1416035Z 
-2026-02-09T04:37:41.1416124Z E741 Ambiguous variable name: `l`
-2026-02-09T04:37:41.1416405Z   --> tests/validation/validate_registries.py:25:33
-2026-02-09T04:37:41.1416678Z    |
-2026-02-09T04:37:41.1416960Z 23 |         lines = [l.strip() for l in f if l.strip()]
-2026-02-09T04:37:41.1417920Z 24 |     # Find table header and separator
-2026-02-09T04:37:41.1418586Z 25 |     header_idx = next((i for i, l in enumerate(lines) if l.startswith('|')), None)
-2026-02-09T04:37:41.1419222Z    |                                 ^
-2026-02-09T04:37:41.1420202Z 26 |     sep_idx = header_idx + 1 if header_idx is not None and len(lines) > header_idx+1 and set(lines[header_idx+1].replace('|','').strip…
-2026-02-09T04:37:41.1420777Z 27 |     if header_idx is None or sep_idx is None:
-2026-02-09T04:37:41.1421043Z    |
-2026-02-09T04:37:41.1421140Z 
-2026-02-09T04:37:41.1421239Z E741 Ambiguous variable name: `l`
-2026-02-09T04:37:41.1421517Z   --> tests/validation/validate_registries.py:30:9
-2026-02-09T04:37:41.1421788Z    |
-2026-02-09T04:37:41.1422035Z 28 |         return False, 'Missing or malformed table header/separator'
-2026-02-09T04:37:41.1422402Z 29 |     # Check for empty/placeholder rows
-2026-02-09T04:37:41.1422676Z 30 |     for l in lines[sep_idx+1:]:
-2026-02-09T04:37:41.1423127Z    |         ^
-2026-02-09T04:37:41.1423338Z 31 |         if l.count('|') < 2:
-2026-02-09T04:37:41.1423577Z 32 |             continue
-2026-02-09T04:37:41.1423783Z    |
-2026-02-09T04:37:41.1423880Z 
-2026-02-09T04:37:41.1423954Z Found 5 errors.
-2026-02-09T04:37:41.1424171Z [*] 2 fixable with the `--fix` option.
-2026-02-09T04:37:41.1434746Z ##[error]Process completed with exit code 1.
-2026-02-09T04:37:41.1621103Z Post job cleanup.
-2026-02-09T04:37:41.2557974Z [command]/usr/bin/git version
-2026-02-09T04:37:41.2595174Z git version 2.52.0
-2026-02-09T04:37:41.2638219Z Temporarily overriding HOME='/home/runner/work/_temp/0c3970fe-748f-4bc4-a76b-715546f3cb37' before making global git config changes
-2026-02-09T04:37:41.2640466Z Adding repository directory to the temporary git global config as a safe directory
-2026-02-09T04:37:41.2644385Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/agent-zero-evolution/agent-zero-evolution
-2026-02-09T04:37:41.2680388Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
-2026-02-09T04:37:41.2712256Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
-2026-02-09T04:37:41.2948703Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
-2026-02-09T04:37:41.2970073Z http.https://github.com/.extraheader
-2026-02-09T04:37:41.2982200Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
-2026-02-09T04:37:41.3012144Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
-2026-02-09T04:37:41.3232157Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
-2026-02-09T04:37:41.3261771Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
-2026-02-09T04:37:41.3590733Z Cleaning up orphan processes
+﻿2026-02-09T04:44:58.1347038Z Current runner version: '2.331.0'
+2026-02-09T04:44:58.1380561Z ##[group]Runner Image Provisioner
+2026-02-09T04:44:58.1381790Z Hosted Compute Agent
+2026-02-09T04:44:58.1382787Z Version: 20260123.484
+2026-02-09T04:44:58.1383827Z Commit: 6bd6555ca37d84114959e1c76d2c01448ff61c5d
+2026-02-09T04:44:58.1385033Z Build Date: 2026-01-23T19:41:17Z
+2026-02-09T04:44:58.1386577Z Worker ID: {ea953e22-e671-4f0d-bd57-ebcf6801bff0}
+2026-02-09T04:44:58.1387859Z Azure Region: westcentralus
+2026-02-09T04:44:58.1388804Z ##[endgroup]
+2026-02-09T04:44:58.1391539Z ##[group]Operating System
+2026-02-09T04:44:58.1392604Z Ubuntu
+2026-02-09T04:44:58.1393387Z 24.04.3
+2026-02-09T04:44:58.1394172Z LTS
+2026-02-09T04:44:58.1394945Z ##[endgroup]
+2026-02-09T04:44:58.1396005Z ##[group]Runner Image
+2026-02-09T04:44:58.1397034Z Image: ubuntu-24.04
+2026-02-09T04:44:58.1397904Z Version: 20260201.15.1
+2026-02-09T04:44:58.1399797Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260201.15/images/ubuntu/Ubuntu2404-Readme.md
+2026-02-09T04:44:58.1402554Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260201.15
+2026-02-09T04:44:58.1404215Z ##[endgroup]
+2026-02-09T04:44:58.1406600Z ##[group]GITHUB_TOKEN Permissions
+2026-02-09T04:44:58.1409813Z Contents: read
+2026-02-09T04:44:58.1410612Z Metadata: read
+2026-02-09T04:44:58.1411606Z Packages: read
+2026-02-09T04:44:58.1412365Z ##[endgroup]
+2026-02-09T04:44:58.1415595Z Secret source: Actions
+2026-02-09T04:44:58.1417285Z Prepare workflow directory
+2026-02-09T04:44:58.1818415Z Prepare all required actions
+2026-02-09T04:44:58.1857041Z Getting action download info
+2026-02-09T04:44:58.5565734Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+2026-02-09T04:44:58.6592421Z Download action repository 'actions/setup-python@v5' (SHA:a26af69be951a213d495a4c3e4e4022e16d87065)
+2026-02-09T04:44:58.8813049Z Complete job name: lint
+2026-02-09T04:44:58.9512410Z ##[group]Run actions/checkout@v4
+2026-02-09T04:44:58.9513304Z with:
+2026-02-09T04:44:58.9513828Z   repository: DrivenIdeaLab/agent-zero-evolution
+2026-02-09T04:44:58.9514605Z   token: ***
+2026-02-09T04:44:58.9515010Z   ssh-strict: true
+2026-02-09T04:44:58.9515688Z   ssh-user: git
+2026-02-09T04:44:58.9516127Z   persist-credentials: true
+2026-02-09T04:44:58.9516611Z   clean: true
+2026-02-09T04:44:58.9517029Z   sparse-checkout-cone-mode: true
+2026-02-09T04:44:58.9517542Z   fetch-depth: 1
+2026-02-09T04:44:58.9517963Z   fetch-tags: false
+2026-02-09T04:44:58.9518424Z   show-progress: true
+2026-02-09T04:44:58.9518865Z   lfs: false
+2026-02-09T04:44:58.9519257Z   submodules: false
+2026-02-09T04:44:58.9519682Z   set-safe-directory: true
+2026-02-09T04:44:58.9520438Z ##[endgroup]
+2026-02-09T04:44:59.0584243Z Syncing repository: DrivenIdeaLab/agent-zero-evolution
+2026-02-09T04:44:59.0586449Z ##[group]Getting Git version info
+2026-02-09T04:44:59.0587435Z Working directory is '/home/runner/work/agent-zero-evolution/agent-zero-evolution'
+2026-02-09T04:44:59.0588602Z [command]/usr/bin/git version
+2026-02-09T04:44:59.0655116Z git version 2.52.0
+2026-02-09T04:44:59.0681088Z ##[endgroup]
+2026-02-09T04:44:59.0702056Z Temporarily overriding HOME='/home/runner/work/_temp/ab09e640-d82d-40e5-846c-dcd85e3bacb7' before making global git config changes
+2026-02-09T04:44:59.0703568Z Adding repository directory to the temporary git global config as a safe directory
+2026-02-09T04:44:59.0707465Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/agent-zero-evolution/agent-zero-evolution
+2026-02-09T04:44:59.0743318Z Deleting the contents of '/home/runner/work/agent-zero-evolution/agent-zero-evolution'
+2026-02-09T04:44:59.0746877Z ##[group]Initializing the repository
+2026-02-09T04:44:59.0750874Z [command]/usr/bin/git init /home/runner/work/agent-zero-evolution/agent-zero-evolution
+2026-02-09T04:44:59.0843011Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-02-09T04:44:59.0844332Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-02-09T04:44:59.0845883Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-02-09T04:44:59.0846673Z hint: call:
+2026-02-09T04:44:59.0847202Z hint:
+2026-02-09T04:44:59.0848383Z hint: 	git config --global init.defaultBranch <name>
+2026-02-09T04:44:59.0849469Z hint:
+2026-02-09T04:44:59.0850579Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-02-09T04:44:59.0852480Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-02-09T04:44:59.0853978Z hint:
+2026-02-09T04:44:59.0854812Z hint: 	git branch -m <name>
+2026-02-09T04:44:59.0856014Z hint:
+2026-02-09T04:44:59.0857153Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-02-09T04:44:59.0859373Z Initialized empty Git repository in /home/runner/work/agent-zero-evolution/agent-zero-evolution/.git/
+2026-02-09T04:44:59.0863117Z [command]/usr/bin/git remote add origin https://github.com/DrivenIdeaLab/agent-zero-evolution
+2026-02-09T04:44:59.0896757Z ##[endgroup]
+2026-02-09T04:44:59.0898135Z ##[group]Disabling automatic garbage collection
+2026-02-09T04:44:59.0901405Z [command]/usr/bin/git config --local gc.auto 0
+2026-02-09T04:44:59.0931542Z ##[endgroup]
+2026-02-09T04:44:59.0933024Z ##[group]Setting up auth
+2026-02-09T04:44:59.0939504Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-02-09T04:44:59.0972702Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-02-09T04:44:59.1297290Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-02-09T04:44:59.1328414Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-02-09T04:44:59.1546844Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-02-09T04:44:59.1579384Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-02-09T04:44:59.1826745Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-02-09T04:44:59.1862757Z ##[endgroup]
+2026-02-09T04:44:59.1864225Z ##[group]Fetching the repository
+2026-02-09T04:44:59.1872676Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +9122957daf4089051a3cb125f3d1c6d803a6f818:refs/remotes/origin/main
+2026-02-09T04:44:59.6762933Z From https://github.com/DrivenIdeaLab/agent-zero-evolution
+2026-02-09T04:44:59.6766070Z  * [new ref]         9122957daf4089051a3cb125f3d1c6d803a6f818 -> origin/main
+2026-02-09T04:44:59.6794983Z ##[endgroup]
+2026-02-09T04:44:59.6797134Z ##[group]Determining the checkout info
+2026-02-09T04:44:59.6798976Z ##[endgroup]
+2026-02-09T04:44:59.6801641Z [command]/usr/bin/git sparse-checkout disable
+2026-02-09T04:44:59.6841035Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-02-09T04:44:59.6866565Z ##[group]Checking out the ref
+2026-02-09T04:44:59.6869664Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2026-02-09T04:44:59.6972717Z Switched to a new branch 'main'
+2026-02-09T04:44:59.6976226Z branch 'main' set up to track 'origin/main'.
+2026-02-09T04:44:59.6982906Z ##[endgroup]
+2026-02-09T04:44:59.7015247Z [command]/usr/bin/git log -1 --format=%H
+2026-02-09T04:44:59.7037379Z 9122957daf4089051a3cb125f3d1c6d803a6f818
+2026-02-09T04:44:59.7352509Z ##[group]Run actions/setup-python@v5
+2026-02-09T04:44:59.7353656Z with:
+2026-02-09T04:44:59.7354448Z   python-version: 3.13
+2026-02-09T04:44:59.7355580Z   check-latest: false
+2026-02-09T04:44:59.7356748Z   token: ***
+2026-02-09T04:44:59.7357596Z   update-environment: true
+2026-02-09T04:44:59.7358602Z   allow-prereleases: false
+2026-02-09T04:44:59.7359819Z   freethreaded: false
+2026-02-09T04:44:59.7360707Z ##[endgroup]
+2026-02-09T04:44:59.9015037Z ##[group]Installed versions
+2026-02-09T04:44:59.9631398Z Successfully set up CPython (3.13.11)
+2026-02-09T04:44:59.9634213Z ##[endgroup]
+2026-02-09T04:44:59.9781204Z ##[group]Run pip install ruff
+2026-02-09T04:44:59.9782279Z [36;1mpip install ruff[0m
+2026-02-09T04:44:59.9914346Z shell: /usr/bin/bash -e {0}
+2026-02-09T04:44:59.9915567Z env:
+2026-02-09T04:44:59.9916635Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:44:59.9918366Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.11/x64/lib/pkgconfig
+2026-02-09T04:44:59.9920088Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:44:59.9921625Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:44:59.9923184Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:44:59.9924731Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.11/x64/lib
+2026-02-09T04:44:59.9926232Z ##[endgroup]
+2026-02-09T04:45:03.3964738Z Collecting ruff
+2026-02-09T04:45:03.4984972Z   Downloading ruff-0.15.0-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (26 kB)
+2026-02-09T04:45:03.5349755Z Downloading ruff-0.15.0-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (11.1 MB)
+2026-02-09T04:45:03.6917293Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 11.1/11.1 MB 95.9 MB/s  0:00:00
+2026-02-09T04:45:03.7247006Z Installing collected packages: ruff
+2026-02-09T04:45:03.8518030Z Successfully installed ruff-0.15.0
+2026-02-09T04:45:04.0019947Z 
+2026-02-09T04:45:04.0021131Z [notice] A new release of pip is available: 26.0 -> 26.0.1
+2026-02-09T04:45:04.0021964Z [notice] To update, run: pip install --upgrade pip
+2026-02-09T04:45:04.0684269Z ##[group]Run ruff check skills/ hooks/ tests/ --ignore E501
+2026-02-09T04:45:04.0684738Z [36;1mruff check skills/ hooks/ tests/ --ignore E501[0m
+2026-02-09T04:45:04.0718453Z shell: /usr/bin/bash -e {0}
+2026-02-09T04:45:04.0718700Z env:
+2026-02-09T04:45:04.0718978Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:45:04.0719422Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.11/x64/lib/pkgconfig
+2026-02-09T04:45:04.0719864Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:45:04.0720227Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:45:04.0720591Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:45:04.0720958Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.11/x64/lib
+2026-02-09T04:45:04.0721267Z ##[endgroup]
+2026-02-09T04:45:04.0863544Z F811 [*] Redefinition of unused `os` from line 15
+2026-02-09T04:45:04.0864263Z   --> skills/custom/system_health_check.py:15:8
+2026-02-09T04:45:04.0864826Z    |
+2026-02-09T04:45:04.0865139Z 13 |     print(report)
+2026-02-09T04:45:04.0865693Z 14 | """
+2026-02-09T04:45:04.0865984Z 15 | import os
+2026-02-09T04:45:04.0866391Z    |        -- previous definition of `os` here
+2026-02-09T04:45:04.0866888Z 16 | from datetime import datetime
+2026-02-09T04:45:04.0867322Z 17 |
+2026-02-09T04:45:04.0867628Z 18 | import os
+2026-02-09T04:45:04.0867959Z    |        ^^ `os` redefined here
+2026-02-09T04:45:04.0868811Z 19 | PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+2026-02-09T04:45:04.0869567Z 20 | EXPECTED_DIRS = [
+2026-02-09T04:45:04.0869897Z    |
+2026-02-09T04:45:04.0870200Z help: Remove definition: `os`
+2026-02-09T04:45:04.0870472Z 
+2026-02-09T04:45:04.0870668Z F811 [*] Redefinition of unused `os` from line 11
+2026-02-09T04:45:04.0871207Z   --> tests/validation/validate_registries.py:11:8
+2026-02-09T04:45:04.0871702Z    |
+2026-02-09T04:45:04.0872105Z  9 | Run: python tests/validation/validate_registries.py
+2026-02-09T04:45:04.0872614Z 10 | """
+2026-02-09T04:45:04.0872887Z 11 | import os
+2026-02-09T04:45:04.0873240Z    |        -- previous definition of `os` here
+2026-02-09T04:45:04.0873669Z 12 |
+2026-02-09T04:45:04.0873927Z 13 | import os
+2026-02-09T04:45:04.0874251Z    |        ^^ `os` redefined here
+2026-02-09T04:45:04.0875489Z 14 | PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+2026-02-09T04:45:04.0876183Z 15 | REGISTRIES = [
+2026-02-09T04:45:04.0876386Z    |
+2026-02-09T04:45:04.0876573Z help: Remove definition: `os`
+2026-02-09T04:45:04.0876734Z 
+2026-02-09T04:45:04.0876839Z E741 Ambiguous variable name: `l`
+2026-02-09T04:45:04.0877132Z   --> tests/validation/validate_registries.py:26:33
+2026-02-09T04:45:04.0877415Z    |
+2026-02-09T04:45:04.0877643Z 24 |         lines = [line.strip() for line in f if line.strip()]
+2026-02-09T04:45:04.0877972Z 25 |     # Find table header and separator
+2026-02-09T04:45:04.0878838Z 26 |     header_idx = next((i for i, l in enumerate(lines) if l.startswith('|')), None)
+2026-02-09T04:45:04.0879535Z    |                                 ^
+2026-02-09T04:45:04.0880869Z 27 |     sep_idx = header_idx + 1 if header_idx is not None and len(lines) > header_idx+1 and set(lines[header_idx+1].replace('|','').strip…
+2026-02-09T04:45:04.0881490Z 28 |     if header_idx is None or sep_idx is None:
+2026-02-09T04:45:04.0881766Z    |
+2026-02-09T04:45:04.0881866Z 
+2026-02-09T04:45:04.0881966Z E741 Ambiguous variable name: `l`
+2026-02-09T04:45:04.0882265Z   --> tests/validation/validate_registries.py:31:9
+2026-02-09T04:45:04.0882538Z    |
+2026-02-09T04:45:04.0882803Z 29 |         return False, 'Missing or malformed table header/separator'
+2026-02-09T04:45:04.0883168Z 30 |     # Check for empty/placeholder rows
+2026-02-09T04:45:04.0883440Z 31 |     for l in lines[sep_idx+1:]:
+2026-02-09T04:45:04.0883684Z    |         ^
+2026-02-09T04:45:04.0883874Z 32 |         if l.count('|') < 2:
+2026-02-09T04:45:04.0884124Z 33 |             continue
+2026-02-09T04:45:04.0884650Z    |
+2026-02-09T04:45:04.0884775Z 
+2026-02-09T04:45:04.0884857Z Found 4 errors.
+2026-02-09T04:45:04.0885071Z [*] 2 fixable with the `--fix` option.
+2026-02-09T04:45:04.0896574Z ##[error]Process completed with exit code 1.
+2026-02-09T04:45:04.1079417Z Post job cleanup.
+2026-02-09T04:45:04.2016831Z [command]/usr/bin/git version
+2026-02-09T04:45:04.2051928Z git version 2.52.0
+2026-02-09T04:45:04.2093883Z Temporarily overriding HOME='/home/runner/work/_temp/2bd4ed3e-8c32-4392-adc4-545b9ad49c2d' before making global git config changes
+2026-02-09T04:45:04.2095078Z Adding repository directory to the temporary git global config as a safe directory
+2026-02-09T04:45:04.2099930Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/agent-zero-evolution/agent-zero-evolution
+2026-02-09T04:45:04.2140318Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-02-09T04:45:04.2172459Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-02-09T04:45:04.2401713Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-02-09T04:45:04.2421641Z http.https://github.com/.extraheader
+2026-02-09T04:45:04.2434015Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-02-09T04:45:04.2464213Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-02-09T04:45:04.2691196Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-02-09T04:45:04.2727470Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-02-09T04:45:04.3105215Z Cleaning up orphan processes

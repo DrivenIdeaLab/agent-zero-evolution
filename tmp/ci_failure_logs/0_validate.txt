@@ -1,206 +1,206 @@
-﻿2026-02-09T04:37:27.3224739Z Current runner version: '2.331.0'
-2026-02-09T04:37:27.3260606Z ##[group]Runner Image Provisioner
-2026-02-09T04:37:27.3262120Z Hosted Compute Agent
-2026-02-09T04:37:27.3263071Z Version: 20260123.484
-2026-02-09T04:37:27.3264051Z Commit: 6bd6555ca37d84114959e1c76d2c01448ff61c5d
-2026-02-09T04:37:27.3265123Z Build Date: 2026-01-23T19:41:17Z
-2026-02-09T04:37:27.3266390Z Worker ID: {fa0bfe08-e672-44c7-a86a-bfd715ff2395}
-2026-02-09T04:37:27.3267859Z Azure Region: eastus
-2026-02-09T04:37:27.3268873Z ##[endgroup]
-2026-02-09T04:37:27.3271267Z ##[group]Operating System
-2026-02-09T04:37:27.3272263Z Ubuntu
-2026-02-09T04:37:27.3273004Z 24.04.3
-2026-02-09T04:37:27.3273920Z LTS
-2026-02-09T04:37:27.3274770Z ##[endgroup]
-2026-02-09T04:37:27.3275589Z ##[group]Runner Image
-2026-02-09T04:37:27.3276932Z Image: ubuntu-24.04
-2026-02-09T04:37:27.3277795Z Version: 20260201.15.1
-2026-02-09T04:37:27.3279981Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260201.15/images/ubuntu/Ubuntu2404-Readme.md
-2026-02-09T04:37:27.3282590Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260201.15
-2026-02-09T04:37:27.3284260Z ##[endgroup]
-2026-02-09T04:37:27.3286019Z ##[group]GITHUB_TOKEN Permissions
-2026-02-09T04:37:27.3288769Z Contents: read
-2026-02-09T04:37:27.3289635Z Metadata: read
-2026-02-09T04:37:27.3290434Z Packages: read
-2026-02-09T04:37:27.3291788Z ##[endgroup]
-2026-02-09T04:37:27.3294467Z Secret source: Actions
-2026-02-09T04:37:27.3295833Z Prepare workflow directory
-2026-02-09T04:37:27.3761170Z Prepare all required actions
-2026-02-09T04:37:27.3818674Z Getting action download info
-2026-02-09T04:37:27.6175901Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
-2026-02-09T04:37:27.7015822Z Download action repository 'actions/setup-python@v5' (SHA:a26af69be951a213d495a4c3e4e4022e16d87065)
-2026-02-09T04:37:27.8889684Z Complete job name: validate
-2026-02-09T04:37:27.9569629Z ##[group]Run actions/checkout@v4
-2026-02-09T04:37:27.9570460Z with:
-2026-02-09T04:37:27.9570945Z   repository: DrivenIdeaLab/agent-zero-evolution
-2026-02-09T04:37:27.9571688Z   token: ***
-2026-02-09T04:37:27.9572078Z   ssh-strict: true
-2026-02-09T04:37:27.9572475Z   ssh-user: git
-2026-02-09T04:37:27.9572880Z   persist-credentials: true
-2026-02-09T04:37:27.9573317Z   clean: true
-2026-02-09T04:37:27.9573712Z   sparse-checkout-cone-mode: true
-2026-02-09T04:37:27.9574184Z   fetch-depth: 1
-2026-02-09T04:37:27.9574572Z   fetch-tags: false
-2026-02-09T04:37:27.9574976Z   show-progress: true
-2026-02-09T04:37:27.9575372Z   lfs: false
-2026-02-09T04:37:27.9575747Z   submodules: false
-2026-02-09T04:37:27.9576155Z   set-safe-directory: true
-2026-02-09T04:37:27.9577276Z ##[endgroup]
-2026-02-09T04:37:28.0638994Z Syncing repository: DrivenIdeaLab/agent-zero-evolution
-2026-02-09T04:37:28.0641007Z ##[group]Getting Git version info
-2026-02-09T04:37:28.0641958Z Working directory is '/home/runner/work/agent-zero-evolution/agent-zero-evolution'
-2026-02-09T04:37:28.0643118Z [command]/usr/bin/git version
-2026-02-09T04:37:28.0710755Z git version 2.52.0
-2026-02-09T04:37:28.0736325Z ##[endgroup]
-2026-02-09T04:37:28.0750348Z Temporarily overriding HOME='/home/runner/work/_temp/f02da316-5c9c-4483-bd26-ec002e5bba13' before making global git config changes
-2026-02-09T04:37:28.0751763Z Adding repository directory to the temporary git global config as a safe directory
-2026-02-09T04:37:28.0762610Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/agent-zero-evolution/agent-zero-evolution
-2026-02-09T04:37:28.0798097Z Deleting the contents of '/home/runner/work/agent-zero-evolution/agent-zero-evolution'
-2026-02-09T04:37:28.0801535Z ##[group]Initializing the repository
-2026-02-09T04:37:28.0805577Z [command]/usr/bin/git init /home/runner/work/agent-zero-evolution/agent-zero-evolution
-2026-02-09T04:37:28.0914191Z hint: Using 'master' as the name for the initial branch. This default branch name
-2026-02-09T04:37:28.0915889Z hint: will change to "main" in Git 3.0. To configure the initial branch name
-2026-02-09T04:37:28.0918074Z hint: to use in all of your new repositories, which will suppress this warning,
-2026-02-09T04:37:28.0919650Z hint: call:
-2026-02-09T04:37:28.0920493Z hint:
-2026-02-09T04:37:28.0921462Z hint: 	git config --global init.defaultBranch <name>
-2026-02-09T04:37:28.0922757Z hint:
-2026-02-09T04:37:28.0923888Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
-2026-02-09T04:37:28.0926090Z hint: 'development'. The just-created branch can be renamed via this command:
-2026-02-09T04:37:28.0927515Z hint:
-2026-02-09T04:37:28.0928191Z hint: 	git branch -m <name>
-2026-02-09T04:37:28.0928991Z hint:
-2026-02-09T04:37:28.0930037Z hint: Disable this message with "git config set advice.defaultBranchName false"
-2026-02-09T04:37:28.0932105Z Initialized empty Git repository in /home/runner/work/agent-zero-evolution/agent-zero-evolution/.git/
-2026-02-09T04:37:28.0935104Z [command]/usr/bin/git remote add origin https://github.com/DrivenIdeaLab/agent-zero-evolution
-2026-02-09T04:37:28.0966368Z ##[endgroup]
-2026-02-09T04:37:28.0967844Z ##[group]Disabling automatic garbage collection
-2026-02-09T04:37:28.0971514Z [command]/usr/bin/git config --local gc.auto 0
-2026-02-09T04:37:28.1000019Z ##[endgroup]
-2026-02-09T04:37:28.1000696Z ##[group]Setting up auth
-2026-02-09T04:37:28.1006319Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
-2026-02-09T04:37:28.1036008Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
-2026-02-09T04:37:28.1379299Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
-2026-02-09T04:37:28.1409761Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
-2026-02-09T04:37:28.1625700Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
-2026-02-09T04:37:28.1654582Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
-2026-02-09T04:37:28.1883672Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
-2026-02-09T04:37:28.1917051Z ##[endgroup]
-2026-02-09T04:37:28.1924580Z ##[group]Fetching the repository
-2026-02-09T04:37:28.1926045Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +19f2926a46ee58443afa1f739e3be5207777f00d:refs/remotes/origin/main
-2026-02-09T04:37:28.3486875Z From https://github.com/DrivenIdeaLab/agent-zero-evolution
-2026-02-09T04:37:28.3488946Z  * [new ref]         19f2926a46ee58443afa1f739e3be5207777f00d -> origin/main
-2026-02-09T04:37:28.3516859Z ##[endgroup]
-2026-02-09T04:37:28.3518693Z ##[group]Determining the checkout info
-2026-02-09T04:37:28.3520539Z ##[endgroup]
-2026-02-09T04:37:28.3523685Z [command]/usr/bin/git sparse-checkout disable
-2026-02-09T04:37:28.3572188Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
-2026-02-09T04:37:28.3607369Z ##[group]Checking out the ref
-2026-02-09T04:37:28.3608367Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
-2026-02-09T04:37:28.3705246Z Switched to a new branch 'main'
-2026-02-09T04:37:28.3708615Z branch 'main' set up to track 'origin/main'.
-2026-02-09T04:37:28.3714826Z ##[endgroup]
-2026-02-09T04:37:28.3748353Z [command]/usr/bin/git log -1 --format=%H
-2026-02-09T04:37:28.3774898Z 19f2926a46ee58443afa1f739e3be5207777f00d
-2026-02-09T04:37:28.4042039Z ##[group]Run actions/setup-python@v5
-2026-02-09T04:37:28.4042671Z with:
-2026-02-09T04:37:28.4043069Z   python-version: 3.13
-2026-02-09T04:37:28.4043573Z   check-latest: false
-2026-02-09T04:37:28.4044176Z   token: ***
-2026-02-09T04:37:28.4044592Z   update-environment: true
-2026-02-09T04:37:28.4045077Z   allow-prereleases: false
-2026-02-09T04:37:28.4045777Z   freethreaded: false
-2026-02-09T04:37:28.4046213Z ##[endgroup]
-2026-02-09T04:37:28.5704509Z ##[group]Installed versions
-2026-02-09T04:37:28.5828773Z Successfully set up CPython (3.13.11)
-2026-02-09T04:37:28.5830066Z ##[endgroup]
-2026-02-09T04:37:28.5945021Z ##[group]Run python tests/validation/validate_registries.py
-2026-02-09T04:37:28.5946040Z [36;1mpython tests/validation/validate_registries.py[0m
-2026-02-09T04:37:28.6114213Z shell: /usr/bin/bash -e {0}
-2026-02-09T04:37:28.6114775Z env:
-2026-02-09T04:37:28.6115357Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.11/x64
-2026-02-09T04:37:28.6116377Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.11/x64/lib/pkgconfig
-2026-02-09T04:37:28.6117572Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
-2026-02-09T04:37:28.6118467Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
-2026-02-09T04:37:28.6119356Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
-2026-02-09T04:37:28.6120695Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.11/x64/lib
-2026-02-09T04:37:28.6121599Z ##[endgroup]
-2026-02-09T04:37:28.8350152Z docs/registry/skills.md: MISSING
-2026-02-09T04:37:28.8351165Z docs/registry/hooks.md: MISSING
-2026-02-09T04:37:28.8352168Z docs/registry/permissions.md: MISSING
-2026-02-09T04:37:28.8353156Z docs/registry/agents.md: MISSING
-2026-02-09T04:37:28.8354020Z docs/registry/commands.md: MISSING
-2026-02-09T04:37:28.8419351Z ##[group]Run python skills/custom/system_health_check.py
-2026-02-09T04:37:28.8420240Z [36;1mpython skills/custom/system_health_check.py[0m
-2026-02-09T04:37:28.8452650Z shell: /usr/bin/bash -e {0}
-2026-02-09T04:37:28.8453157Z env:
-2026-02-09T04:37:28.8453678Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.11/x64
-2026-02-09T04:37:28.8454650Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.11/x64/lib/pkgconfig
-2026-02-09T04:37:28.8455616Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
-2026-02-09T04:37:28.8456706Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
-2026-02-09T04:37:28.8457614Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
-2026-02-09T04:37:28.8458499Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.11/x64/lib
-2026-02-09T04:37:28.8459220Z ##[endgroup]
-2026-02-09T04:37:28.8911042Z ##[group]Run LAST_MODIFIED=$(stat -c %Y docs/changelog.md 2>/dev/null || stat -f %m docs/changelog.md)
-2026-02-09T04:37:28.8912673Z [36;1mLAST_MODIFIED=$(stat -c %Y docs/changelog.md 2>/dev/null || stat -f %m docs/changelog.md)[0m
-2026-02-09T04:37:28.8914015Z [36;1mSEVEN_DAYS_AGO=$(date -d '7 days ago' +%s 2>/dev/null || date -v-7d +%s)[0m
-2026-02-09T04:37:28.8915069Z [36;1mif [ "$LAST_MODIFIED" -lt "$SEVEN_DAYS_AGO" ]; then[0m
-2026-02-09T04:37:28.8915930Z [36;1m  echo "WARNING: Changelog not updated in 7+ days"[0m
-2026-02-09T04:37:28.8916919Z [36;1mfi[0m
-2026-02-09T04:37:28.8947253Z shell: /usr/bin/bash -e {0}
-2026-02-09T04:37:28.8947765Z env:
-2026-02-09T04:37:28.8948311Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.11/x64
-2026-02-09T04:37:28.8949333Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.11/x64/lib/pkgconfig
-2026-02-09T04:37:28.8950340Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
-2026-02-09T04:37:28.8951260Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
-2026-02-09T04:37:28.8952152Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
-2026-02-09T04:37:28.8953042Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.11/x64/lib
-2026-02-09T04:37:28.8953788Z ##[endgroup]
-2026-02-09T04:37:28.9106974Z ##[group]Run if grep -rn "sk-ant-\|sk-\|ghp_\|PRIVATE_KEY" \
-2026-02-09T04:37:28.9107921Z [36;1mif grep -rn "sk-ant-\|sk-\|ghp_\|PRIVATE_KEY" \[0m
-2026-02-09T04:37:28.9108795Z [36;1m  --include="*.py" --include="*.md" --include="*.sh" \[0m
-2026-02-09T04:37:28.9109565Z [36;1m  --exclude-dir=.git .; then[0m
-2026-02-09T04:37:28.9110284Z [36;1m  echo "ERROR: Potential secrets found in codebase!"[0m
-2026-02-09T04:37:28.9111000Z [36;1m  exit 1[0m
-2026-02-09T04:37:28.9111405Z [36;1mfi[0m
-2026-02-09T04:37:28.9142188Z shell: /usr/bin/bash -e {0}
-2026-02-09T04:37:28.9142701Z env:
-2026-02-09T04:37:28.9143218Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.11/x64
-2026-02-09T04:37:28.9144185Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.11/x64/lib/pkgconfig
-2026-02-09T04:37:28.9145160Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
-2026-02-09T04:37:28.9146030Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
-2026-02-09T04:37:28.9147152Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
-2026-02-09T04:37:28.9148076Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.11/x64/lib
-2026-02-09T04:37:28.9148805Z ##[endgroup]
-2026-02-09T04:37:28.9264573Z ##[group]Run for f in docs/registry/*.md; do
-2026-02-09T04:37:28.9265291Z [36;1mfor f in docs/registry/*.md; do[0m
-2026-02-09T04:37:28.9265935Z [36;1m  if [ $(wc -l < "$f") -lt 3 ]; then[0m
-2026-02-09T04:37:28.9266885Z [36;1m    echo "ERROR: $f appears empty or malformed"[0m
-2026-02-09T04:37:28.9267562Z [36;1m    exit 1[0m
-2026-02-09T04:37:28.9267988Z [36;1m  fi[0m
-2026-02-09T04:37:28.9268371Z [36;1mdone[0m
-2026-02-09T04:37:28.9297631Z shell: /usr/bin/bash -e {0}
-2026-02-09T04:37:28.9298131Z env:
-2026-02-09T04:37:28.9298674Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.11/x64
-2026-02-09T04:37:28.9299651Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.11/x64/lib/pkgconfig
-2026-02-09T04:37:28.9300596Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
-2026-02-09T04:37:28.9301438Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
-2026-02-09T04:37:28.9302288Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
-2026-02-09T04:37:28.9303192Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.11/x64/lib
-2026-02-09T04:37:28.9303899Z ##[endgroup]
-2026-02-09T04:37:28.9524888Z Post job cleanup.
-2026-02-09T04:37:29.1186774Z Post job cleanup.
-2026-02-09T04:37:29.2123295Z [command]/usr/bin/git version
-2026-02-09T04:37:29.2159172Z git version 2.52.0
-2026-02-09T04:37:29.2202876Z Temporarily overriding HOME='/home/runner/work/_temp/023d3d31-f076-47b1-b3f5-7e64c3a4f7d3' before making global git config changes
-2026-02-09T04:37:29.2205010Z Adding repository directory to the temporary git global config as a safe directory
-2026-02-09T04:37:29.2215415Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/agent-zero-evolution/agent-zero-evolution
-2026-02-09T04:37:29.2249453Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
-2026-02-09T04:37:29.2281985Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
-2026-02-09T04:37:29.2511302Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
-2026-02-09T04:37:29.2531952Z http.https://github.com/.extraheader
-2026-02-09T04:37:29.2545420Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
-2026-02-09T04:37:29.2576330Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
-2026-02-09T04:37:29.2798328Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
-2026-02-09T04:37:29.2831317Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
-2026-02-09T04:37:29.3179429Z Cleaning up orphan processes
+﻿2026-02-09T04:44:57.5853793Z Current runner version: '2.331.0'
+2026-02-09T04:44:57.5880806Z ##[group]Runner Image Provisioner
+2026-02-09T04:44:57.5882028Z Hosted Compute Agent
+2026-02-09T04:44:57.5882803Z Version: 20260123.484
+2026-02-09T04:44:57.5883668Z Commit: 6bd6555ca37d84114959e1c76d2c01448ff61c5d
+2026-02-09T04:44:57.5884776Z Build Date: 2026-01-23T19:41:17Z
+2026-02-09T04:44:57.5885777Z Worker ID: {fbc992d6-4ca2-4020-bf0e-cb1a16bebe61}
+2026-02-09T04:44:57.5886747Z Azure Region: eastus2
+2026-02-09T04:44:57.5887616Z ##[endgroup]
+2026-02-09T04:44:57.5889519Z ##[group]Operating System
+2026-02-09T04:44:57.5890536Z Ubuntu
+2026-02-09T04:44:57.5891344Z 24.04.3
+2026-02-09T04:44:57.5891998Z LTS
+2026-02-09T04:44:57.5892789Z ##[endgroup]
+2026-02-09T04:44:57.5893541Z ##[group]Runner Image
+2026-02-09T04:44:57.5894380Z Image: ubuntu-24.04
+2026-02-09T04:44:57.5895129Z Version: 20260201.15.1
+2026-02-09T04:44:57.5897018Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260201.15/images/ubuntu/Ubuntu2404-Readme.md
+2026-02-09T04:44:57.5899298Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260201.15
+2026-02-09T04:44:57.5900948Z ##[endgroup]
+2026-02-09T04:44:57.5902547Z ##[group]GITHUB_TOKEN Permissions
+2026-02-09T04:44:57.5905636Z Contents: read
+2026-02-09T04:44:57.5906429Z Metadata: read
+2026-02-09T04:44:57.5907201Z Packages: read
+2026-02-09T04:44:57.5907978Z ##[endgroup]
+2026-02-09T04:44:57.5910971Z Secret source: Actions
+2026-02-09T04:44:57.5911919Z Prepare workflow directory
+2026-02-09T04:44:57.6354971Z Prepare all required actions
+2026-02-09T04:44:57.6408395Z Getting action download info
+2026-02-09T04:44:57.9186501Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+2026-02-09T04:44:58.0398218Z Download action repository 'actions/setup-python@v5' (SHA:a26af69be951a213d495a4c3e4e4022e16d87065)
+2026-02-09T04:44:58.2263372Z Complete job name: validate
+2026-02-09T04:44:58.2912740Z ##[group]Run actions/checkout@v4
+2026-02-09T04:44:58.2913493Z with:
+2026-02-09T04:44:58.2913951Z   repository: DrivenIdeaLab/agent-zero-evolution
+2026-02-09T04:44:58.2914697Z   token: ***
+2026-02-09T04:44:58.2915072Z   ssh-strict: true
+2026-02-09T04:44:58.2915466Z   ssh-user: git
+2026-02-09T04:44:58.2915853Z   persist-credentials: true
+2026-02-09T04:44:58.2916290Z   clean: true
+2026-02-09T04:44:58.2916679Z   sparse-checkout-cone-mode: true
+2026-02-09T04:44:58.2917130Z   fetch-depth: 1
+2026-02-09T04:44:58.2917507Z   fetch-tags: false
+2026-02-09T04:44:58.2917885Z   show-progress: true
+2026-02-09T04:44:58.2918274Z   lfs: false
+2026-02-09T04:44:58.2918618Z   submodules: false
+2026-02-09T04:44:58.2919022Z   set-safe-directory: true
+2026-02-09T04:44:58.2919756Z ##[endgroup]
+2026-02-09T04:44:58.3995027Z Syncing repository: DrivenIdeaLab/agent-zero-evolution
+2026-02-09T04:44:58.3996731Z ##[group]Getting Git version info
+2026-02-09T04:44:58.3997606Z Working directory is '/home/runner/work/agent-zero-evolution/agent-zero-evolution'
+2026-02-09T04:44:58.3998664Z [command]/usr/bin/git version
+2026-02-09T04:44:58.4038105Z git version 2.52.0
+2026-02-09T04:44:58.4062596Z ##[endgroup]
+2026-02-09T04:44:58.4076229Z Temporarily overriding HOME='/home/runner/work/_temp/12e77480-e78a-470a-bf85-2e51adc00d94' before making global git config changes
+2026-02-09T04:44:58.4077537Z Adding repository directory to the temporary git global config as a safe directory
+2026-02-09T04:44:58.4089094Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/agent-zero-evolution/agent-zero-evolution
+2026-02-09T04:44:58.4125488Z Deleting the contents of '/home/runner/work/agent-zero-evolution/agent-zero-evolution'
+2026-02-09T04:44:58.4128756Z ##[group]Initializing the repository
+2026-02-09T04:44:58.4133101Z [command]/usr/bin/git init /home/runner/work/agent-zero-evolution/agent-zero-evolution
+2026-02-09T04:44:58.4202860Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-02-09T04:44:58.4203996Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-02-09T04:44:58.4205251Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-02-09T04:44:58.4206290Z hint: call:
+2026-02-09T04:44:58.4206632Z hint:
+2026-02-09T04:44:58.4207093Z hint: 	git config --global init.defaultBranch <name>
+2026-02-09T04:44:58.4207652Z hint:
+2026-02-09T04:44:58.4208182Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-02-09T04:44:58.4209041Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-02-09T04:44:58.4209736Z hint:
+2026-02-09T04:44:58.4210350Z hint: 	git branch -m <name>
+2026-02-09T04:44:58.4210839Z hint:
+2026-02-09T04:44:58.4211469Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-02-09T04:44:58.4212547Z Initialized empty Git repository in /home/runner/work/agent-zero-evolution/agent-zero-evolution/.git/
+2026-02-09T04:44:58.4217365Z [command]/usr/bin/git remote add origin https://github.com/DrivenIdeaLab/agent-zero-evolution
+2026-02-09T04:44:58.4250941Z ##[endgroup]
+2026-02-09T04:44:58.4251656Z ##[group]Disabling automatic garbage collection
+2026-02-09T04:44:58.4255025Z [command]/usr/bin/git config --local gc.auto 0
+2026-02-09T04:44:58.4283521Z ##[endgroup]
+2026-02-09T04:44:58.4284173Z ##[group]Setting up auth
+2026-02-09T04:44:58.4291091Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-02-09T04:44:58.4322292Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-02-09T04:44:58.4626004Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-02-09T04:44:58.4657954Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-02-09T04:44:58.4892279Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-02-09T04:44:58.4923803Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-02-09T04:44:58.5169864Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-02-09T04:44:58.5205204Z ##[endgroup]
+2026-02-09T04:44:58.5206235Z ##[group]Fetching the repository
+2026-02-09T04:44:58.5214652Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +9122957daf4089051a3cb125f3d1c6d803a6f818:refs/remotes/origin/main
+2026-02-09T04:44:58.7439602Z From https://github.com/DrivenIdeaLab/agent-zero-evolution
+2026-02-09T04:44:58.7440942Z  * [new ref]         9122957daf4089051a3cb125f3d1c6d803a6f818 -> origin/main
+2026-02-09T04:44:58.7471463Z ##[endgroup]
+2026-02-09T04:44:58.7472520Z ##[group]Determining the checkout info
+2026-02-09T04:44:58.7474122Z ##[endgroup]
+2026-02-09T04:44:58.7480168Z [command]/usr/bin/git sparse-checkout disable
+2026-02-09T04:44:58.7520505Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-02-09T04:44:58.7548274Z ##[group]Checking out the ref
+2026-02-09T04:44:58.7553222Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2026-02-09T04:44:58.7660579Z Switched to a new branch 'main'
+2026-02-09T04:44:58.7662222Z branch 'main' set up to track 'origin/main'.
+2026-02-09T04:44:58.7669639Z ##[endgroup]
+2026-02-09T04:44:58.7704731Z [command]/usr/bin/git log -1 --format=%H
+2026-02-09T04:44:58.7727811Z 9122957daf4089051a3cb125f3d1c6d803a6f818
+2026-02-09T04:44:58.7966821Z ##[group]Run actions/setup-python@v5
+2026-02-09T04:44:58.7967312Z with:
+2026-02-09T04:44:58.7967664Z   python-version: 3.13
+2026-02-09T04:44:58.7968067Z   check-latest: false
+2026-02-09T04:44:58.7968594Z   token: ***
+2026-02-09T04:44:58.7968969Z   update-environment: true
+2026-02-09T04:44:58.7969396Z   allow-prereleases: false
+2026-02-09T04:44:58.7970158Z   freethreaded: false
+2026-02-09T04:44:58.7970541Z ##[endgroup]
+2026-02-09T04:44:58.9610691Z ##[group]Installed versions
+2026-02-09T04:44:58.9703201Z Successfully set up CPython (3.13.11)
+2026-02-09T04:44:58.9704920Z ##[endgroup]
+2026-02-09T04:44:58.9828318Z ##[group]Run python tests/validation/validate_registries.py
+2026-02-09T04:44:58.9829094Z [36;1mpython tests/validation/validate_registries.py[0m
+2026-02-09T04:44:58.9954765Z shell: /usr/bin/bash -e {0}
+2026-02-09T04:44:58.9955252Z env:
+2026-02-09T04:44:58.9955719Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:44:58.9956490Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.11/x64/lib/pkgconfig
+2026-02-09T04:44:58.9957234Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:44:58.9957893Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:44:58.9958583Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:44:58.9959254Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.11/x64/lib
+2026-02-09T04:44:58.9959841Z ##[endgroup]
+2026-02-09T04:44:59.2186196Z docs/registry/skills.md: PASS - OK
+2026-02-09T04:44:59.2186933Z docs/registry/hooks.md: PASS - OK
+2026-02-09T04:44:59.2187558Z docs/registry/permissions.md: PASS - OK
+2026-02-09T04:44:59.2188069Z docs/registry/agents.md: PASS - OK
+2026-02-09T04:44:59.2188545Z docs/registry/commands.md: PASS - OK
+2026-02-09T04:44:59.2250718Z ##[group]Run python skills/custom/system_health_check.py
+2026-02-09T04:44:59.2251497Z [36;1mpython skills/custom/system_health_check.py[0m
+2026-02-09T04:44:59.2286775Z shell: /usr/bin/bash -e {0}
+2026-02-09T04:44:59.2287219Z env:
+2026-02-09T04:44:59.2287672Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:44:59.2288431Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.11/x64/lib/pkgconfig
+2026-02-09T04:44:59.2289192Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:44:59.2289854Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:44:59.2290751Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:44:59.2291425Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.11/x64/lib
+2026-02-09T04:44:59.2291986Z ##[endgroup]
+2026-02-09T04:44:59.2751832Z ##[group]Run LAST_MODIFIED=$(stat -c %Y docs/changelog.md 2>/dev/null || stat -f %m docs/changelog.md)
+2026-02-09T04:44:59.2752988Z [36;1mLAST_MODIFIED=$(stat -c %Y docs/changelog.md 2>/dev/null || stat -f %m docs/changelog.md)[0m
+2026-02-09T04:44:59.2753939Z [36;1mSEVEN_DAYS_AGO=$(date -d '7 days ago' +%s 2>/dev/null || date -v-7d +%s)[0m
+2026-02-09T04:44:59.2754692Z [36;1mif [ "$LAST_MODIFIED" -lt "$SEVEN_DAYS_AGO" ]; then[0m
+2026-02-09T04:44:59.2755347Z [36;1m  echo "WARNING: Changelog not updated in 7+ days"[0m
+2026-02-09T04:44:59.2755898Z [36;1mfi[0m
+2026-02-09T04:44:59.2788751Z shell: /usr/bin/bash -e {0}
+2026-02-09T04:44:59.2789192Z env:
+2026-02-09T04:44:59.2789649Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:44:59.2790714Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.11/x64/lib/pkgconfig
+2026-02-09T04:44:59.2791452Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:44:59.2792146Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:44:59.2792798Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:44:59.2793463Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.11/x64/lib
+2026-02-09T04:44:59.2794043Z ##[endgroup]
+2026-02-09T04:44:59.2989474Z ##[group]Run if grep -rn "sk-ant-\|sk-\|ghp_\|PRIVATE_KEY" \
+2026-02-09T04:44:59.2990439Z [36;1mif grep -rn "sk-ant-\|sk-\|ghp_\|PRIVATE_KEY" \[0m
+2026-02-09T04:44:59.2991129Z [36;1m  --include="*.py" --include="*.md" --include="*.sh" \[0m
+2026-02-09T04:44:59.2991725Z [36;1m  --exclude-dir=.git .; then[0m
+2026-02-09T04:44:59.2992294Z [36;1m  echo "ERROR: Potential secrets found in codebase!"[0m
+2026-02-09T04:44:59.2992863Z [36;1m  exit 1[0m
+2026-02-09T04:44:59.2993216Z [36;1mfi[0m
+2026-02-09T04:44:59.3025671Z shell: /usr/bin/bash -e {0}
+2026-02-09T04:44:59.3026125Z env:
+2026-02-09T04:44:59.3026584Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:44:59.3027327Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.11/x64/lib/pkgconfig
+2026-02-09T04:44:59.3028053Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:44:59.3028702Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:44:59.3029396Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:44:59.3030284Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.11/x64/lib
+2026-02-09T04:44:59.3030857Z ##[endgroup]
+2026-02-09T04:44:59.3147029Z ##[group]Run for f in docs/registry/*.md; do
+2026-02-09T04:44:59.3147585Z [36;1mfor f in docs/registry/*.md; do[0m
+2026-02-09T04:44:59.3148108Z [36;1m  if [ $(wc -l < "$f") -lt 3 ]; then[0m
+2026-02-09T04:44:59.3148703Z [36;1m    echo "ERROR: $f appears empty or malformed"[0m
+2026-02-09T04:44:59.3149230Z [36;1m    exit 1[0m
+2026-02-09T04:44:59.3149617Z [36;1m  fi[0m
+2026-02-09T04:44:59.3150206Z [36;1mdone[0m
+2026-02-09T04:44:59.3182979Z shell: /usr/bin/bash -e {0}
+2026-02-09T04:44:59.3183423Z env:
+2026-02-09T04:44:59.3183880Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:44:59.3184642Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.11/x64/lib/pkgconfig
+2026-02-09T04:44:59.3185366Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:44:59.3186027Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:44:59.3186679Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:44:59.3187359Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.11/x64/lib
+2026-02-09T04:44:59.3187922Z ##[endgroup]
+2026-02-09T04:44:59.3398830Z Post job cleanup.
+2026-02-09T04:44:59.5080824Z Post job cleanup.
+2026-02-09T04:44:59.6029691Z [command]/usr/bin/git version
+2026-02-09T04:44:59.6065993Z git version 2.52.0
+2026-02-09T04:44:59.6106529Z Temporarily overriding HOME='/home/runner/work/_temp/5754b49d-9497-495b-a319-f358ea6f150d' before making global git config changes
+2026-02-09T04:44:59.6108313Z Adding repository directory to the temporary git global config as a safe directory
+2026-02-09T04:44:59.6111968Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/agent-zero-evolution/agent-zero-evolution
+2026-02-09T04:44:59.6148463Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-02-09T04:44:59.6182220Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-02-09T04:44:59.6426284Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-02-09T04:44:59.6447712Z http.https://github.com/.extraheader
+2026-02-09T04:44:59.6460191Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-02-09T04:44:59.6492372Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-02-09T04:44:59.6731244Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-02-09T04:44:59.6765169Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-02-09T04:44:59.7131631Z Cleaning up orphan processes

@@ -1,70 +1,67 @@
-﻿2026-02-09T04:37:41.1226515Z ##[group]Run ruff check skills/ hooks/ tests/ --ignore E501
-2026-02-09T04:37:41.1227020Z [36;1mruff check skills/ hooks/ tests/ --ignore E501[0m
-2026-02-09T04:37:41.1260586Z shell: /usr/bin/bash -e {0}
-2026-02-09T04:37:41.1260824Z env:
-2026-02-09T04:37:41.1261077Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.11/x64
-2026-02-09T04:37:41.1261504Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.11/x64/lib/pkgconfig
-2026-02-09T04:37:41.1261947Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
-2026-02-09T04:37:41.1262322Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
-2026-02-09T04:37:41.1262677Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
-2026-02-09T04:37:41.1263054Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.11/x64/lib
-2026-02-09T04:37:41.1263361Z ##[endgroup]
-2026-02-09T04:37:41.1403295Z F401 [*] `datetime.timedelta` imported but unused
-2026-02-09T04:37:41.1404040Z   --> skills/custom/system_health_check.py:16:32
-2026-02-09T04:37:41.1404534Z    |
-2026-02-09T04:37:41.1404897Z 14 | """
-2026-02-09T04:37:41.1405180Z 15 | import os
-2026-02-09T04:37:41.1405552Z 16 | from datetime import datetime, timedelta
-2026-02-09T04:37:41.1406038Z    |                                ^^^^^^^^^
-2026-02-09T04:37:41.1406455Z 17 |
-2026-02-09T04:37:41.1406797Z 18 | PROJECT_ROOT = '/a0/usr/projects/agent_zero'
-2026-02-09T04:37:41.1407273Z    |
-2026-02-09T04:37:41.1407622Z help: Remove unused import: `datetime.timedelta`
-2026-02-09T04:37:41.1408237Z 
-2026-02-09T04:37:41.1408415Z F401 [*] `typing.Any` imported but unused
-2026-02-09T04:37:41.1408890Z  --> skills/custom/task_continuation.py:2:32
-2026-02-09T04:37:41.1409327Z   |
-2026-02-09T04:37:41.1409581Z 1 | import re
-2026-02-09T04:37:41.1409906Z 2 | from typing import List, Dict, Any
-2026-02-09T04:37:41.1410317Z   |                                ^^^
-2026-02-09T04:37:41.1410677Z 3 |
-2026-02-09T04:37:41.1411056Z 4 | def detect_incomplete(response: str) -> bool:
-2026-02-09T04:37:41.1411548Z   |
-2026-02-09T04:37:41.1411854Z help: Remove unused import: `typing.Any`
-2026-02-09T04:37:41.1412174Z 
-2026-02-09T04:37:41.1412324Z E741 Ambiguous variable name: `l`
-2026-02-09T04:37:41.1412791Z   --> tests/validation/validate_registries.py:23:32
-2026-02-09T04:37:41.1413226Z    |
-2026-02-09T04:37:41.1413866Z 21 | def validate_table(path):
-2026-02-09T04:37:41.1414244Z 22 |     with open(path) as f:
-2026-02-09T04:37:41.1414643Z 23 |         lines = [l.strip() for l in f if l.strip()]
-2026-02-09T04:37:41.1414937Z    |                                ^
-2026-02-09T04:37:41.1415187Z 24 |     # Find table header and separator
-2026-02-09T04:37:41.1415576Z 25 |     header_idx = next((i for i, l in enumerate(lines) if l.startswith('|')), None)
-2026-02-09T04:37:41.1415933Z    |
-2026-02-09T04:37:41.1416031Z 
-2026-02-09T04:37:41.1416121Z E741 Ambiguous variable name: `l`
-2026-02-09T04:37:41.1416402Z   --> tests/validation/validate_registries.py:25:33
-2026-02-09T04:37:41.1416675Z    |
-2026-02-09T04:37:41.1416941Z 23 |         lines = [l.strip() for l in f if l.strip()]
-2026-02-09T04:37:41.1417905Z 24 |     # Find table header and separator
-2026-02-09T04:37:41.1418579Z 25 |     header_idx = next((i for i, l in enumerate(lines) if l.startswith('|')), None)
-2026-02-09T04:37:41.1419216Z    |                                 ^
-2026-02-09T04:37:41.1420195Z 26 |     sep_idx = header_idx + 1 if header_idx is not None and len(lines) > header_idx+1 and set(lines[header_idx+1].replace('|','').strip…
-2026-02-09T04:37:41.1420768Z 27 |     if header_idx is None or sep_idx is None:
-2026-02-09T04:37:41.1421039Z    |
-2026-02-09T04:37:41.1421135Z 
-2026-02-09T04:37:41.1421235Z E741 Ambiguous variable name: `l`
-2026-02-09T04:37:41.1421514Z   --> tests/validation/validate_registries.py:30:9
-2026-02-09T04:37:41.1421785Z    |
-2026-02-09T04:37:41.1422032Z 28 |         return False, 'Missing or malformed table header/separator'
-2026-02-09T04:37:41.1422399Z 29 |     # Check for empty/placeholder rows
-2026-02-09T04:37:41.1422672Z 30 |     for l in lines[sep_idx+1:]:
-2026-02-09T04:37:41.1422913Z    |         ^
-2026-02-09T04:37:41.1423330Z 31 |         if l.count('|') < 2:
-2026-02-09T04:37:41.1423573Z 32 |             continue
-2026-02-09T04:37:41.1423780Z    |
-2026-02-09T04:37:41.1423876Z 
-2026-02-09T04:37:41.1423951Z Found 5 errors.
-2026-02-09T04:37:41.1424167Z [*] 2 fixable with the `--fix` option.
-2026-02-09T04:37:41.1434728Z ##[error]Process completed with exit code 1.
+﻿2026-02-09T04:45:04.0684246Z ##[group]Run ruff check skills/ hooks/ tests/ --ignore E501
+2026-02-09T04:45:04.0684733Z [36;1mruff check skills/ hooks/ tests/ --ignore E501[0m
+2026-02-09T04:45:04.0718442Z shell: /usr/bin/bash -e {0}
+2026-02-09T04:45:04.0718696Z env:
+2026-02-09T04:45:04.0718974Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:45:04.0719408Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.11/x64/lib/pkgconfig
+2026-02-09T04:45:04.0719859Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:45:04.0720224Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:45:04.0720588Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.11/x64
+2026-02-09T04:45:04.0720955Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.11/x64/lib
+2026-02-09T04:45:04.0721263Z ##[endgroup]
+2026-02-09T04:45:04.0863493Z F811 [*] Redefinition of unused `os` from line 15
+2026-02-09T04:45:04.0864257Z   --> skills/custom/system_health_check.py:15:8
+2026-02-09T04:45:04.0864736Z    |
+2026-02-09T04:45:04.0865134Z 13 |     print(report)
+2026-02-09T04:45:04.0865687Z 14 | """
+2026-02-09T04:45:04.0865980Z 15 | import os
+2026-02-09T04:45:04.0866385Z    |        -- previous definition of `os` here
+2026-02-09T04:45:04.0866883Z 16 | from datetime import datetime
+2026-02-09T04:45:04.0867317Z 17 |
+2026-02-09T04:45:04.0867622Z 18 | import os
+2026-02-09T04:45:04.0867954Z    |        ^^ `os` redefined here
+2026-02-09T04:45:04.0868803Z 19 | PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+2026-02-09T04:45:04.0869560Z 20 | EXPECTED_DIRS = [
+2026-02-09T04:45:04.0869891Z    |
+2026-02-09T04:45:04.0870195Z help: Remove definition: `os`
+2026-02-09T04:45:04.0870467Z 
+2026-02-09T04:45:04.0870662Z F811 [*] Redefinition of unused `os` from line 11
+2026-02-09T04:45:04.0871201Z   --> tests/validation/validate_registries.py:11:8
+2026-02-09T04:45:04.0871695Z    |
+2026-02-09T04:45:04.0872099Z  9 | Run: python tests/validation/validate_registries.py
+2026-02-09T04:45:04.0872598Z 10 | """
+2026-02-09T04:45:04.0872882Z 11 | import os
+2026-02-09T04:45:04.0873235Z    |        -- previous definition of `os` here
+2026-02-09T04:45:04.0873664Z 12 |
+2026-02-09T04:45:04.0873922Z 13 | import os
+2026-02-09T04:45:04.0874245Z    |        ^^ `os` redefined here
+2026-02-09T04:45:04.0875479Z 14 | PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+2026-02-09T04:45:04.0876176Z 15 | REGISTRIES = [
+2026-02-09T04:45:04.0876376Z    |
+2026-02-09T04:45:04.0876570Z help: Remove definition: `os`
+2026-02-09T04:45:04.0876730Z 
+2026-02-09T04:45:04.0876835Z E741 Ambiguous variable name: `l`
+2026-02-09T04:45:04.0877128Z   --> tests/validation/validate_registries.py:26:33
+2026-02-09T04:45:04.0877412Z    |
+2026-02-09T04:45:04.0877640Z 24 |         lines = [line.strip() for line in f if line.strip()]
+2026-02-09T04:45:04.0877968Z 25 |     # Find table header and separator
+2026-02-09T04:45:04.0878808Z 26 |     header_idx = next((i for i, l in enumerate(lines) if l.startswith('|')), None)
+2026-02-09T04:45:04.0879525Z    |                                 ^
+2026-02-09T04:45:04.0880857Z 27 |     sep_idx = header_idx + 1 if header_idx is not None and len(lines) > header_idx+1 and set(lines[header_idx+1].replace('|','').strip…
+2026-02-09T04:45:04.0881485Z 28 |     if header_idx is None or sep_idx is None:
+2026-02-09T04:45:04.0881763Z    |
+2026-02-09T04:45:04.0881862Z 
+2026-02-09T04:45:04.0881962Z E741 Ambiguous variable name: `l`
+2026-02-09T04:45:04.0882262Z   --> tests/validation/validate_registries.py:31:9
+2026-02-09T04:45:04.0882535Z    |
+2026-02-09T04:45:04.0882799Z 29 |         return False, 'Missing or malformed table header/separator'
+2026-02-09T04:45:04.0883164Z 30 |     # Check for empty/placeholder rows
+2026-02-09T04:45:04.0883437Z 31 |     for l in lines[sep_idx+1:]:
+2026-02-09T04:45:04.0883681Z    |         ^
+2026-02-09T04:45:04.0883870Z 32 |         if l.count('|') < 2:
+2026-02-09T04:45:04.0884116Z 33 |             continue
+2026-02-09T04:45:04.0884321Z    |
+2026-02-09T04:45:04.0884772Z 
+2026-02-09T04:45:04.0884854Z Found 4 errors.
+2026-02-09T04:45:04.0885067Z [*] 2 fixable with the `--fix` option.
+2026-02-09T04:45:04.0896555Z ##[error]Process completed with exit code 1.
